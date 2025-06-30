@@ -1,0 +1,33 @@
+# Build output directories, anchored to the project root.
+/obj/
+/bin/
+
+# Editor-specific settings
+.vscode/
+
+# OS-specific files
+.DS_Store
+
+# C/C++ artifacts
+*.d
+*.o
+*.obj
+*.lo
+*.slo
+*.a
+*.lib
+*.so
+*.dylib
+*.dll
+*.gch
+*.pch
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Debugger files
+*.pdb
+*.ilk
+*.dwo
