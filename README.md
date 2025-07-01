@@ -11,7 +11,18 @@
 
 ## 算法实现
 
-项目通过修改 `include/wildcard_matcher.hpp` 中的 `SOLVER_CHOICE` 宏来选择不同的实现。以下算法按照实现难度由易到难排序。
+项目采用 C++ 模板实现了一种策略模式，允许在编译时零开销地选择不同的算法实现。
+在 src/main.cpp 中，通过修改 using 别名来指定需要使用的求解器（Solver）类型，即可轻松切换。
+
+```C++
+// 在 main.cpp 中选择算法
+using SelectedSolver = DpSolver;
+// using SelectedSolver = RecursiveSolver;
+
+// ...
+// 调用时，编译器会自动使用指定的策略
+isMatch<SelectedSolver>(s, p);
+```
 
 ### 1. 递归与回溯 (Recursive Backtracking)
 

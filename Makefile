@@ -1,6 +1,6 @@
 # Compiler and project settings
 CXX        = g++
-CXXFLAGS   = -std=c++17 -Wall -Wextra -g -MMD -MP # -MMD -MP are for auto-dependency generation
+CXXFLAGS   = -std=c++20 -Wall -Wextra -g -MMD -MP # -MMD -MP are for auto-dependency generation
 LDFLAGS    =
 TARGET_DIR = bin
 OBJ_DIR    = obj
