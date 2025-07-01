@@ -11,8 +11,8 @@
 int main() {
     // --- 算法选择 ---
     // 通过指定类型来选择 solver. 这是一个编译时决策.
-    using SelectedSolver = RecursiveSolver;
-    // using SelectedSolver = DpSolver;
+    // using SelectedSolver = RecursiveSolver;
+    using SelectedSolver = DpSolver;
 
     std::string s, p;
 
