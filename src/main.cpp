@@ -13,7 +13,8 @@ int main() {
     // 通过指定类型来选择 solver. 这是一个编译时决策.
     // using SelectedSolver = RecursiveSolver;
     // using SelectedSolver = DpSolver;
-    using SelectedSolver = NFASolver;
+    // using SelectedSolver = NFASolver;
+    using SelectedSolver = GreedySolver;
 
     std::string s, p;
 
