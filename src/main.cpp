@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 
-// Include the generic matcher and all available solver implementations
+// 引入通用 matcher 和所有可用的 solver 实现
 #include "../include/dp_solver.hpp"
 #include "../include/greedy_solver.hpp"
 #include "../include/nfa_solver.hpp"
@@ -9,10 +9,10 @@
 #include "../include/wildcard_matcher.hpp"
 
 int main() {
-    // --- Algorithm Selection ---
-    // Select the solver by specifying its type. This is a compile-time decision.
-    using SelectedSolver = DpSolver;
-    // using SelectedSolver = RecursiveSolver;
+    // --- 算法选择 ---
+    // 通过指定类型来选择 solver. 这是一个编译时决策.
+    using SelectedSolver = RecursiveSolver;
+    // using SelectedSolver = DpSolver;
 
     std::string s, p;
 
