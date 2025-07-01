@@ -11,7 +11,7 @@
 
 ## 算法实现
 
-项目通过修改 `include/wildcard_matcher.h` 中的 `SOLVER_CHOICE` 宏来选择不同的实现。以下算法按照实现难度由易到难排序。
+项目通过修改 `include/wildcard_matcher.hpp` 中的 `SOLVER_CHOICE` 宏来选择不同的实现。以下算法按照实现难度由易到难排序。
 
 ### 1. 递归与回溯 (Recursive Backtracking)
 

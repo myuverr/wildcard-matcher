@@ -1,5 +1,4 @@
-#ifndef WILDCARD_MATCHER_H
-#define WILDCARD_MATCHER_H
+#pragma once
 
 // --- Algorithm Selection ---
 // 1: Recursive Backtracking
@@ -10,19 +9,18 @@
 
 // --- Include the selected solver ---
 #if SOLVER_CHOICE == 1
-#include "recursive_solver.h"
+#include "recursive_solver.hpp"
 #elif SOLVER_CHOICE == 2
-#include "dp_solver.h"
+#include "dp_solver.hpp"
 #elif SOLVER_CHOICE == 3
-#include "nfa_solver.h"
+#include "nfa_solver.hpp"
 #elif SOLVER_CHOICE == 4
-#include "greedy_solver.h"
+#include "greedy_solver.hpp"
 #else
-#error "Invalid SOLVER_CHOICE in include/wildcard_matcher.h. Please choose a value between 1 and 4."
+#error \
+    "Invalid SOLVER_CHOICE in include/wildcard_matcher.hpp. Please choose a value between 1 and 4."
 #endif
 
 // --- Function Declaration ---
 // The main matching function exposed to the application.
 bool isMatch(const char *s, const char *p);
-
-#endif  // WILDCARD_MATCHER_H

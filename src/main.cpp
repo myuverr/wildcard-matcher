@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 
-#include "../include/wildcard_matcher.h"
+#include "../include/wildcard_matcher.hpp"
 
 int main() {
     std::string s, p;
