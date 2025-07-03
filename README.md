@@ -1,6 +1,6 @@
 # Wildcard Matcher
 
-一个 C++项目，用于解决带通配符 `?` 和 `*` 的字符串匹配问题。项目内置了四种不同的算法实现，可通过宏定义进行切换。
+一个 C++项目，用于解决带通配符 `?` 和 `*` 的字符串匹配问题。项目内置了四种不同的算法实现，可通过宏定义进行切换。项目还内置了一套性能评测框架，可以精确测量并比较不同算法在时间与空间上的开销。
 
 ## 问题定义
 
@@ -21,7 +21,7 @@ using SelectedSolver = DpSolver;
 
 // ...
 // 调用时，编译器会自动使用指定的策略
-isMatch<SelectedSolver>(s, p);
+runSolver<SelectedSolver>(s, p);
 ```
 
 ### 1. 递归与回溯 (Recursive Backtracking)
