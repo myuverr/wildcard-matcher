@@ -9,7 +9,7 @@
  */
 struct RecursiveSolver {
    private:
-    // 使用 static 成员在头文件中追踪递归深度
+    // 用于追踪递归深度的静态成员
     inline static size_t current_depth = 0;
     inline static size_t max_depth = 0;
 
@@ -33,7 +33,7 @@ struct RecursiveSolver {
      * @return SolverProfile 包含匹配结果、耗时（微秒）和实际额外空间（字节）的评测数据。
      */
     static SolverProfile runAndProfile(const char* s, const char* p) {
-        // 1. 在每次评测开始前，重置深度计数器
+        // 1. 重置深度计数器
         current_depth = 0;
         max_depth = 0;
 
@@ -67,7 +67,7 @@ struct RecursiveSolver {
      * @return bool 如果 s 和 p 完全匹配，则返回 true，否则返回 false。
      */
     static bool isMatch(const char* s, const char* p) {
-        // 在函数入口创建追踪器，在其作用域结束时自动析构
+        // 在函数入口创建追踪器，自动追踪递归深度
         DepthTracker tracker;
 
         // base case: p 耗尽, 当 s 也耗尽时匹配成功

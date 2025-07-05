@@ -3,6 +3,7 @@
 
 #include "../include/dp_solver.hpp"
 #include "../include/greedy_solver.hpp"
+#include "../include/memo_solver.hpp"
 #include "../include/nfa_solver.hpp"
 #include "../include/recursive_solver.hpp"
 #include "../include/wildcard_matcher.hpp"
@@ -13,11 +14,12 @@ int main() {
      *
      * 可选的求解器类型包括：
      * - `RecursiveSolver`: 递归与回溯求解器
+     * - `MemoSolver`:      带备忘录的递归求解器
      * - `DpSolver`:        动态规划求解器
      * - `NFASolver`:       基于状态机的求解器
      * - `GreedySolver`:    双指针贪心法求解器
      */
-    using SelectedSolver = DpSolver;
+    using SelectedSolver = MemoSolver;
 
     std::string s, p;
 
