@@ -7,9 +7,9 @@
 #include "wildcard_matcher.hpp"
 
 /**
- * @brief 基于状态机的求解器
+ * @brief 基于状态机的算法（空间优化DP）
  */
-struct NFASolver {
+class NFASolver {
    public:
     /**
      * @brief 运行并评测基于状态机的算法的性能。
@@ -22,18 +22,18 @@ struct NFASolver {
         int m = strlen(s);
         int n = strlen(p);
 
-        // 2. 计算额外空间开销
-        // 额外空间主要来自大小为 n+1 的一维 dp 表
-        std::size_t space_used = (static_cast<std::size_t>(n) + 1) * sizeof(bool);
-
-        // 3. 启动计时器并执行核心匹配逻辑
+        // 2. 启动计时器并执行核心匹配逻辑
         auto start_time = std::chrono::high_resolution_clock::now();
         bool result = isMatch(s, p, m, n);
 
-        // 4. 结束计时并计算耗时
+        // 3. 结束计时并计算耗时
         auto end_time = std::chrono::high_resolution_clock::now();
         auto duration =
             std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+
+        // 4. 计算额外空间开销
+        // 额外空间主要来自大小为 n+1 的一维 dp 表
+        std::size_t space_used = (static_cast<std::size_t>(n) + 1) * sizeof(bool);
 
         // 5. 返回包含结果和评测数据的结构体
         return {result, duration.count(), space_used};
@@ -56,10 +56,10 @@ struct NFASolver {
         // dp[j] 对应于二维 DP 中的 dp[i][j]
         std::vector<bool> dp(n + 1, false);
 
-        // base case: 空 string vs 空 pattern
+        // 空模式串匹配空字符串
         dp[0] = true;
 
-        // base case: 空 string vs 非空 pattern, 只有当 p 前缀全是 '*' 才可能匹配
+        // 只有当 p 前缀全是 '*' 时，非空模式串匹配空字符串
         for (int j = 1; j <= n; ++j) {
             if (p[j - 1] == '*') {
                 dp[j] = dp[j - 1];
@@ -70,7 +70,7 @@ struct NFASolver {
         for (int i = 1; i <= m; ++i) {
             // pre 保存迭代前 dp[j-1] 的状态, 相当于二维DP中的 dp[i-1][j-1]
             bool pre = dp[0];
-            // dp[i][0] 恒为 false (非空 string vs 空 pattern)
+            // dp[i][0] 恒为 false
             dp[0] = false;
 
             for (int j = 1; j <= n; ++j) {

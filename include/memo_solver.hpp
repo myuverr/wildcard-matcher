@@ -7,9 +7,9 @@
 #include "wildcard_matcher.hpp"
 
 /**
- * @brief 带备忘录的递归求解器
+ * @brief 带备忘录的递归算法
  */
-struct MemoSolver {
+class MemoSolver {
    private:
     // 用于追踪递归深度的静态成员
     inline static size_t current_depth = 0;
@@ -34,33 +34,37 @@ struct MemoSolver {
      * @return SolverProfile 包含匹配结果、耗时（微秒）和额外空间（字节）的评测数据。
      */
     static SolverProfile runAndProfile(const char* s, const char* p) {
-        // 1. 准备工作：计算长度并重置深度计数器
+        // 1. 准备工作
+
+        // 1.1 计算长度
         int m = strlen(s);
         int n = strlen(p);
+
+        // 1.2 重置深度计数器
         current_depth = 0;
         max_depth = 0;
 
-        // 2. 初始化备忘录
+        // 1.3 初始化备忘录
         // -1 表示未计算, 0 表示 false, 1 表示 true
         std::vector<std::vector<int>> memo(m + 1, std::vector<int>(n + 1, -1));
 
-        // 3. 启动计时器并执行核心匹配逻辑
+        // 2. 启动计时器并执行核心匹配逻辑
         auto start_time = std::chrono::high_resolution_clock::now();
         bool result = isMatch(s, p, 0, 0, m, n, memo);
 
-        // 4. 结束计时并计算耗时
+        // 3. 结束计时并计算耗时
         auto end_time = std::chrono::high_resolution_clock::now();
         auto duration =
             std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
 
-        // 5. 计算额外空间开销
+        // 4. 计算额外空间开销
         // 额外空间 = 备忘录大小 + 递归栈最大深度占用的空间
 
-        // 5.1 计算备忘录的大小
+        // 4.1 计算备忘录的大小
         std::size_t memo_space =
             (static_cast<std::size_t>(m) + 1) * (static_cast<std::size_t>(n) + 1) * sizeof(int);
 
-        // 5.2 计算递归栈的最大空间
+        // 4.2 计算递归栈的最大空间
         // 每个递归栈帧的大致大小 = 5个参数(s, p, i, j, memo) + 1个返回地址
         std::size_t space_per_frame = sizeof(const char*) * 2 + sizeof(int) * 2 +
                                       sizeof(std::vector<std::vector<int>>&) + sizeof(void*);
@@ -68,7 +72,7 @@ struct MemoSolver {
 
         std::size_t total_space_used = memo_space + stack_space;
 
-        // 6. 返回包含结果和评测数据的结构体
+        // 5. 返回包含结果和评测数据的结构体
         return {result, duration.count(), total_space_used};
     }
 
@@ -100,7 +104,7 @@ struct MemoSolver {
 
         bool ans = false;
 
-        // Base Case: 模式串 p 已经耗尽
+        // 模式串 p 已经耗尽
         if (j == n) {
             ans = (i == m);
         } else {

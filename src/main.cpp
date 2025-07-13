@@ -10,16 +10,16 @@
 
 int main() {
     /**
-     * @brief 定义核心求解器的类型别名。
+     * @brief 定义核心算法的类型别名。
      *
-     * 可选的求解器类型包括：
-     * - `RecursiveSolver`: 递归与回溯求解器
-     * - `MemoSolver`:      带备忘录的递归求解器
-     * - `DpSolver`:        动态规划求解器
-     * - `NFASolver`:       基于状态机的求解器
-     * - `GreedySolver`:    双指针贪心法求解器
+     * 可选的算法类型包括：
+     * - RecursiveSolver: 递归与回溯算法
+     * - MemoSolver:      带备忘录的递归算法
+     * - DpSolver:        动态规划算法
+     * - NFASolver:       基于状态机的算法（空间优化DP）
+     * - GreedySolver:    双指针贪心法算法
      */
-    using SelectedSolver = MemoSolver;
+    using SelectedSolver = GreedySolver;
 
     std::string s, p;
 

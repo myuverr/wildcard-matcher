@@ -5,9 +5,9 @@
 #include "wildcard_matcher.hpp"
 
 /**
- * @brief 递归与回溯求解器
+ * @brief 递归与回溯算法
  */
-struct RecursiveSolver {
+class RecursiveSolver {
    private:
     // 用于追踪递归深度的静态成员
     inline static size_t current_depth = 0;
@@ -33,7 +33,7 @@ struct RecursiveSolver {
      * @return SolverProfile 包含匹配结果、耗时（微秒）和实际额外空间（字节）的评测数据。
      */
     static SolverProfile runAndProfile(const char* s, const char* p) {
-        // 1. 重置深度计数器
+        // 1. 准备工作：重置深度计数器
         current_depth = 0;
         max_depth = 0;
 
@@ -70,25 +70,25 @@ struct RecursiveSolver {
         // 在函数入口创建追踪器，自动追踪递归深度
         DepthTracker tracker;
 
-        // base case: p 耗尽, 当 s 也耗尽时匹配成功
+        // p 耗尽, 当 s 也耗尽时匹配成功
         if (*p == '\0') {
             return *s == '\0';
         }
 
-        // case: p 当前字符是 '*'
+        // p 当前字符是 '*'
         if (*p == '*') {
             // 优化: 跳过连续的 '*'
             while (*(p + 1) == '*') {
                 p++;
             }
 
-            // 产生两个分支 (depth-first search):
+            // 产生两个分支:
             // 1. '*' 匹配空序列, pattern 后移 (p+1)
             // 2. s 非空, 让 '*' 匹配 s 的一个字符, s 后移 (s+1), pattern 不变
             return isMatch(s, p + 1) || (*s != '\0' && isMatch(s + 1, p));
         }
 
-        // case: p 当前是 '?' 或普通字符
+        // p 当前是 '?' 或普通字符
         // s 必须非空，且当前字符需要匹配
         if (*s != '\0' && (*p == '?' || *p == *s)) {
             return isMatch(s + 1, p + 1);
