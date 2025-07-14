@@ -8,15 +8,15 @@ struct SolverProfile {
     std::size_t space_used_bytes;
 };
 
-// --- Concept 定义 ---
-// 如果一个类型提供了静态 runAndProfile 方法, 它就满足 WildcardSolver concept.
+// --- Concept Definition ---
+// A type satisfies the WildcardSolver concept if it provides a static runAndProfile method.
 template <typename T>
 concept WildcardSolver = requires(const char* s, const char* p) {
     { T::runAndProfile(s, p) } -> std::same_as<SolverProfile>;
 };
 
-// --- 函数声明 ---
-// 核心匹配函数, 基于 solver 策略进行模板化.
+// --- Function Declaration ---
+// The core matching function, templated based on the solver strategy.
 template <WildcardSolver Solver>
 SolverProfile runSolver(const char* s, const char* p) {
     return Solver::runAndProfile(s, p);

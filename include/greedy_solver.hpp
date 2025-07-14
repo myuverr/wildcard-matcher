@@ -5,83 +5,85 @@
 #include "wildcard_matcher.hpp"
 
 /**
- * @brief 双指针贪心法算法
+ * @brief Implements the wildcard matching algorithm using a two-pointer greedy approach.
  */
 class GreedySolver {
    public:
     /**
-     * @brief 运行并评测双指针贪心算法的性能。
-     * @param s 待匹配的文本字符串。
-     * @param p 包含通配符 '?' 和 '*' 的模式字符串。
-     * @return SolverProfile 包含匹配结果、耗时（微秒）和额外空间（字节）的评测数据。
+     * @brief Runs and profiles the two-pointer greedy algorithm.
+     * @param s The text string to match.
+     * @param p The pattern string containing wildcards '?' and '*'.
+     * @return A SolverProfile struct containing the match result, time elapsed in microseconds, and
+     * extra space used in bytes.
      */
     static SolverProfile runAndProfile(const char* s, const char* p) {
-        // 1. 准备工作 (此算法无需额外准备)
+        // 1. Preparation (no extra setup needed for this algorithm)
 
-        // 2. 启动计时器并执行核心匹配逻辑
+        // 2. Start the timer and execute the core matching logic
         auto start_time = std::chrono::high_resolution_clock::now();
         bool result = isMatch(s, p);
 
-        // 3. 结束计时并计算耗时
+        // 3. Stop the timer and calculate the duration
         auto end_time = std::chrono::high_resolution_clock::now();
         auto duration =
             std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
 
-        // 4. 计算额外空间开销
-        // 额外空间主要来自4个用于遍历和回溯的指针
+        // 4. Calculate extra space overhead
+        // The extra space is mainly from the four pointers used for traversal and backtracking.
         std::size_t space_used = sizeof(const char*) * 4;  // s_ptr, p_ptr, star_ptr, s_match_ptr
 
-        // 5. 返回包含结果和评测数据的结构体
+        // 5. Return the struct containing the result and profiling data
         return {result, duration.count(), space_used};
     }
 
    private:
     /**
-     * @brief [私有] 使用双指针贪心法检查字符串 s 和模式串 p 是否匹配。
+     * @brief [private] Checks if the string and pattern match using a two-pointer greedy approach.
      *
-     * 使用 s_ptr, p_ptr 遍历。遇到 '*' 时, 记录其位置 (star_ptr)
-     * 和对应的 s 的位置 (s_match_ptr)。若后续失配, 则回溯到
-     * star_ptr, 并让 s_ptr 从 s_match_ptr 的下一位重新开始。
+     * Uses s_ptr and p_ptr for traversal. When a '*' is encountered, its position (star_ptr)
+     * and the corresponding position in s (s_match_ptr) are recorded. If a mismatch occurs later,
+     * the algorithm backtracks to the star_ptr and resumes matching s_ptr from the next
+     * position of s_match_ptr.
      *
-     * @param s 待匹配的文本字符串。
-     * @param p 包含通配符的模式字符串。
-     * @return bool 如果 s 和 p 完全匹配，则返回 true，否则返回 false。
+     * @param s The text string to match.
+     * @param p The pattern string with wildcards.
+     * @return true if s and p match completely, false otherwise.
      */
     static bool isMatch(const char* s, const char* p) {
         const char* s_ptr = s;
         const char* p_ptr = p;
-        const char* star_ptr = nullptr;     // 记录 p 中最后出现的 '*' 指针
-        const char* s_match_ptr = nullptr;  // 记录 s 中用于回溯的指针
+        const char* star_ptr = nullptr;     // Pointer to the last '*' in p
+        const char* s_match_ptr = nullptr;  // Pointer in s to backtrack to
         while (*s_ptr) {
-            // 字符匹配, 或 p 为 '?'
+            // Characters match, or p has '?'
             if (*p_ptr == '?' || *p_ptr == *s_ptr) {
                 s_ptr++;
                 p_ptr++;
             }
-            // p 为 '*', 记录回溯位置
+            // p has '*', record backtrack position
             else if (*p_ptr == '*') {
                 star_ptr = p_ptr;
                 p_ptr++;
-                s_match_ptr = s_ptr;  // 记录 s 的匹配位置
+                s_match_ptr = s_ptr;  // Record the matching position in s
             }
-            // 不匹配, 但之前有 '*', 执行回溯
+            // Mismatch, but there was a '*' before, perform backtracking
             else if (star_ptr) {
-                p_ptr = star_ptr + 1;  // p_ptr 回溯到 '*' 的下一个位置
-                s_match_ptr++;         // s_match_ptr 后移, 意味着 '*' 多匹配一个字符
-                s_ptr = s_match_ptr;   // s_ptr 从新的 s_match_ptr 位置开始
+                p_ptr = star_ptr + 1;  // p_ptr backtracks to the position after '*'
+                s_match_ptr++;  // s_match_ptr moves forward, meaning '*' matches one more character
+                s_ptr = s_match_ptr;  // s_ptr starts from the new s_match_ptr position
             }
-            // 不匹配, 且无 '*' 可回溯
+            // Mismatch, and no '*' to backtrack to
             else {
                 return false;
             }
         }
 
-        // s 已耗尽, 清理 p 尾部的所有 '*'
+        // s is exhausted, consume any trailing '*' in p
         while (*p_ptr == '*') {
             p_ptr++;
         }
 
-        // 如果 p 也被耗尽, 则匹配成功
+        // If p is also exhausted, the match is successful
         return !*p_ptr;
     }
 };

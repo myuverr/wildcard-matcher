@@ -5,19 +5,19 @@
 #include "wildcard_matcher.hpp"
 
 /**
- * @brief 递归与回溯算法
+ * @brief Implements the wildcard matching algorithm using recursive backtracking.
  */
 class RecursiveSolver {
    private:
-    // 用于追踪递归深度的静态成员
+    // Static members for tracking recursion depth.
     inline static size_t current_depth = 0;
     inline static size_t max_depth = 0;
 
-    // 辅助类，用于在 isMatch 的作用域内自动管理递归深度
+    // Helper struct to automatically manage recursion depth within the scope of isMatch.
     struct DepthTracker {
         DepthTracker() {
             current_depth++;
-            // 更新全局最大深度
+            // Update the global maximum depth.
             if (current_depth > max_depth) {
                 max_depth = current_depth;
             }
@@ -27,74 +27,77 @@ class RecursiveSolver {
 
    public:
     /**
-     * @brief 运行并评测递归回溯算法的性能。
-     * @param s 待匹配的文本字符串。
-     * @param p 包含通配符 '?' 和 '*' 的模式字符串。
-     * @return SolverProfile 包含匹配结果、耗时（微秒）和实际额外空间（字节）的评测数据。
+     * @brief Runs and profiles the recursive backtracking algorithm.
+     * @param s The text string to match.
+     * @param p The pattern string containing wildcards '?' and '*'.
+     * @return A SolverProfile struct containing the match result, time elapsed in microseconds, and
+     * actual extra space used in bytes.
      */
     static SolverProfile runAndProfile(const char* s, const char* p) {
-        // 1. 准备工作：重置深度计数器
+        // 1. Preparation: Reset depth counters
         current_depth = 0;
         max_depth = 0;
 
-        // 2. 启动计时器并执行核心匹配逻辑
+        // 2. Start the timer and execute the core matching logic
         auto start_time = std::chrono::high_resolution_clock::now();
         bool result = isMatch(s, p);
 
-        // 3. 结束计时并计算耗时
+        // 3. Stop the timer and calculate the duration
         auto end_time = std::chrono::high_resolution_clock::now();
         auto duration =
             std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
 
-        // 4. 计算实际的额外空间开销
-        // 空间开销 = 实际测得的最大递归深度 * 每个栈帧的大致大小
-        // 每个栈帧估算包含：2个指针参数 + 1个返回地址
+        // 4. Calculate the actual extra space overhead
+        // Space overhead = actual max recursion depth * approximate size of each stack frame.
+        // Each stack frame is estimated to contain: 2 pointer arguments + 1 return address.
         std::size_t space_per_frame = sizeof(const char*) * 2 + sizeof(void*);
         std::size_t space_used = max_depth * space_per_frame;
 
-        // 5. 返回包含结果和评测数据的结构体
+        // 5. Return the struct containing the result and profiling data
         return {result, duration.count(), space_used};
     }
 
    private:
     /**
-     * @brief [私有] 使用递归回溯法检查字符串 s 和模式串 p 是否匹配。
+     * @brief [private] Checks if string s and pattern p match using recursive backtracking.
      *
-     * 此为核心算法实现。通过深度优先搜索探索所有可能的匹配路径。
+     * This is the core implementation. It explores all possible matching paths via
+     * depth-first search.
      *
-     * @param s 待匹配的文本字符串。
-     * @param p 包含通配符的模式字符串。
-     * @return bool 如果 s 和 p 完全匹配，则返回 true，否则返回 false。
+     * @param s The text string to match.
+     * @param p The pattern string with wildcards.
+     * @return true if s and p match completely, false otherwise.
      */
     static bool isMatch(const char* s, const char* p) {
-        // 在函数入口创建追踪器，自动追踪递归深度
+        // Create a tracker at the function entry to automatically track recursion depth.
         DepthTracker tracker;
 
-        // p 耗尽, 当 s 也耗尽时匹配成功
+        // If p is exhausted, the match is successful only if s is also exhausted.
         if (*p == '\0') {
             return *s == '\0';
         }
 
-        // p 当前字符是 '*'
+        // If the current character in p is '*'
         if (*p == '*') {
-            // 优化: 跳过连续的 '*'
+            // Optimization: skip consecutive '*'
             while (*(p + 1) == '*') {
                 p++;
             }
 
-            // 产生两个分支:
-            // 1. '*' 匹配空序列, pattern 后移 (p+1)
-            // 2. s 非空, 让 '*' 匹配 s 的一个字符, s 后移 (s+1), pattern 不变
+            // Create two branches:
+            // 1. '*' matches an empty sequence, move pattern forward (p+1).
+            // 2. If s is not empty, let '*' match one character of s, move s forward (s+1), pattern
+            // stays.
             return isMatch(s, p + 1) || (*s != '\0' && isMatch(s + 1, p));
         }
 
-        // p 当前是 '?' 或普通字符
-        // s 必须非空，且当前字符需要匹配
+        // If the current character in p is '?' or a regular character
+        // s must not be empty, and the current characters must match.
         if (*s != '\0' && (*p == '?' || *p == *s)) {
             return isMatch(s + 1, p + 1);
         }
 
-        // 其他情况均不匹配
+        // All other cases are a mismatch.
         return false;
     }
 };
