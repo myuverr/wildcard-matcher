@@ -1,95 +1,79 @@
+English | [中文](README_zh.md)
+
 # Wildcard Matcher
 
-一个 C++项目，用于解决带通配符 `?` 和 `*` 的字符串匹配问题。项目内置了四种不同的算法实现，可通过宏定义进行切换。项目还内置了一套性能评测框架，可以精确测量并比较不同算法在时间与空间上的开销。
+A C++ project designed to solve the string matching problem with wildcards ('?' and '\*'). This project features five different algorithmic implementations that can be switched via type aliasing in the source code. It also includes a built-in profiling framework to precisely measure and compare the time and space overhead of each algorithm.
 
-## 问题定义
+## Problem Definition
 
-判断一个字符串 `s` (仅含小写字母) 能否被一个模式串 `p` (含小写字母、`?` 和 `*`) 完全匹配。
+Determine if an input string `s` (containing only lowercase letters) can be fully matched by a pattern `p` (containing lowercase letters, '?', and '\*').
 
-- `?` 匹配任意单个字符。
-- `*` 匹配任意长度的字符串序列（包括空序列）。
+- `?` matches any single character.
+- `*` matches any sequence of characters (including an empty sequence).
 
-## 算法实现
+## Algorithms Implemented
 
-项目采用 C++ 模板实现了一种策略模式，允许在编译时零开销地选择不同的算法实现。
-在 src/main.cpp 中，通过修改 using 别名来指定需要使用的求解器（Solver）类型，即可轻松切换。
+This project provides five distinct strategies to solve the wildcard matching problem.
 
-```C++
-// 在 main.cpp 中选择算法
-using SelectedSolver = DpSolver;
-// using SelectedSolver = RecursiveSolver;
+1.  **Recursive Backtracking:** A straightforward, depth-first search approach. It's easy to understand but inefficient due to re-computing overlapping subproblems, leading to exponential time complexity in the worst case.
+2.  **Memoized Recursion:** An optimization of the recursive approach. It uses a memoization table to cache the results of subproblems, significantly improving performance by reducing the time complexity to polynomial time (`O(m*n)`).
+3.  **Dynamic Programming (2D):** A bottom-up approach that builds a 2D `dp` table where `dp[i][j]` stores whether the first `i` characters of `s` match the first `j` characters of `p`. It's a standard and robust solution with `O(m*n)` time and space complexity.
+4.  **State Machine (Space-Optimized DP):** This method simulates a Non-deterministic Finite Automaton (NFA) built from the pattern. It's implemented as a space-optimized version of the 2D DP, reducing the space complexity to `O(n)` while maintaining `O(m*n)` time complexity.
+5.  **Two-Pointer Greedy Algorithm:** A highly efficient approach using pointers to traverse the strings. It uses a backtracking mechanism with pointers to handle the `*` wildcard. While it achieves an excellent `O(1)` space complexity, the logic is intricate and harder to implement correctly.
 
-// ...
-// 调用时，编译器会自动使用指定的策略
-runSolver<SelectedSolver>(s, p);
-```
+## Getting Started
 
-### 1. 递归与回溯 (Recursive Backtracking)
+### Prerequisites
 
-- **核心思想**
-  通过递归函数进行深度优先搜索。当遇到 `*` 时，产生两个分支：`*` 匹配空串（模式串指针后移），或 `*` 匹配一个字符（字符串指针后移），并对所有可能性进行回溯。
+- A C++20 compatible compiler (e.g., GCC 10+ or Clang 10+).
+- For Windows users, it is recommended to use the **MinGW-w64** toolchain.
 
-- **复杂度分析**
+### How to Run
 
-  - 时间复杂度: `O(2^(m+n))` (最坏情况，无记忆化)
-  - 空间复杂度: `O(m+n)` (递归栈深度)
+**Step 1: Select an Algorithm**
 
-- **优缺点**
-  - **优点**: 逻辑直观，代码实现直接反映了问题的定义，易于理解。
-  - **缺点**: 存在大量重叠子问题，未经优化的性能极差，在 `*` 较多的情况下会因超时而无法通过。
+- Open the source file `src/main.cpp`.
+- Locate the `using` type alias definition.
+- Change `SelectedSolver` to the algorithm you want to test.
 
-### 2. 带备忘录的递归 (Memoized Recursion)
+  ```cpp
+  // file: src/main.cpp
+  using SelectedSolver = GreedySolver; // <-- Change this line
+  ```
 
-- **核心思想**
-  作为对朴素递归的直接优化，此方法引入了一个二维的 `memo` 表（备忘录）来缓存已经计算过的子问题的结果。在递归调用前，先检查备忘录中是否已存在当前状态（例如 `s` 的后缀和 `p` 的后缀）的解。如果存在，则直接返回，避免了重复计算，从而将指数级的复杂度降低到多项式级别。
+**Step 2: Compile the Code**
 
-- **复杂度分析**
+- Open your terminal and use the following command to compile the program:
 
-  - 时间复杂度: `O(m*n)`
-  - 空间复杂度: `O(m*n)` (备忘录表开销 + 递归栈深度)
+  ```bash
+  g++ -std=c++20 src/main.cpp -o wildcard_matcher
+  ```
 
-- **优缺点**
-  - **优点**: 解决了重叠子问题，性能远超朴素递归，且逻辑上仍是自顶向下的，较为直观。
-  - **缺点**: 空间开销与二维 DP 相当，且仍然存在递归函数调用的开销，对于非常深的递归可能导致栈溢出。
+  - `-std=c++20` specifies the C++ standard.
+  - `-o wildcard_matcher` specifies the output executable name.
 
-### 3. 动态规划 (Dynamic Programming)
+**Step 3: Execute the Program**
 
-- **核心思想**
-  构建一个二维 `dp` 表，其中 `dp[i][j]` 表示 `s` 的前 `i` 个字符是否能与 `p` 的前 `j` 个字符匹配。通过自底向上填充该表来求解，有效避免了重叠子问题。
+- Run the compiled executable from your terminal:
 
-- **复杂度分析**
+  ```bash
+  ./wildcard_matcher
+  ```
 
-  - 时间复杂度: `O(m*n)`
-  - 空间复杂度: `O(m*n)`
+- The program will prompt you to enter the text string `s` and the pattern string `p`.
 
-- **优缺点**
-  - **优点**: 性能稳定高效，是此类问题的标准解决方案，一定能通过所有测试用例。
-  - **缺点**: 空间复杂度较高，当字符串很长时，内存开销显著。
+  ```
+  Enter the text string (s): aab
+  Enter the pattern string (p): a?b*
+  ```
 
-### 4. 基于状态机的实现 (或空间优化 DP)
+**Step 4: View the Results**
 
-- **核心思想**
-  此方法可被视为对一个由模式串 `p` 构建的“非确定性有限状态机 (NFA)”的模拟。我们用一个一维数组 `dp` 来追踪在读入 `s` 的每个字符后，NFA 可能达到的所有状态的集合。在具体实现上，它等同于对二维 DP 的解法进行空间优化。
+- The program will output the match result and the performance metrics of the selected algorithm.
 
-- **复杂度分析**
-
-  - 时间复杂度: `O(m*n)`
-  - 空间复杂度: `O(n)`
-
-- **优缺点**
-  - **优点**: 保持了动态规划的时间效率，同时将空间开销降至线性级别，是兼具性能和效率的优选方案。
-  - **缺点**: 实现上比二维 DP 稍复杂，需要额外变量来处理状态依赖关系，可读性略微下降。
-
-### 5. 双指针贪心法 (Two-Pointer Greedy)
-
-- **核心思想**
-  使用两个主指针 `s_ptr` 和 `p_ptr` 遍历字符串和模式串。当遇到 `*` 时，用两个辅助指针记录下 `*` 的位置和对应的 `s` 的位置。后续若发生不匹配，则回溯到记录的 `*` 位置，并让 `s` 的指针前进一位，相当于让 `*` 多匹配一个字符。
-
-- **复杂度分析**
-
-  - 时间复杂度: `O(m*n)` (最坏情况，但平均性能通常优于此)
-  - 空间复杂度: `O(1)`
-
-- **优缺点**
-  - **优点**: 空间效率达到最优，代码执行效率在大多数情况下也非常高。
-  - **缺点**: 逻辑非常不直观，指针的回溯和更新逻辑精巧但晦涩，是四种方法中最难正确实现的。
+  ```
+  Result: Match Successful
+  Performance Metrics:
+    - Execution Time: ... μs
+    - Extra Space: ... bytes
+  ```
