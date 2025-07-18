@@ -2,6 +2,9 @@
 
 # 带通配符的字符串匹配器
 
+[![C++ Standard](https://img.shields.io/badge/standard-20%2B-blue?style=flat&logo=cplusplus)](https://isocpp.org/std/status)
+[![GitHub license](https://img.shields.io/github/license/suzato/wildcard-matcher)](LICENSE)
+
 一个 C++ 项目，用于解决带通配符 `?` 和 `*` 的字符串匹配问题。项目内置了五种不同的算法实现，可通过修改源代码中的类型别名进行切换。项目还内置了一套性能评测框架，可以精确测量并比较不同算法在时间与空间上的开销。
 
 ## 问题定义

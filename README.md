@@ -2,6 +2,9 @@ English | [中文](README_zh.md)
 
 # Wildcard Matcher
 
+[![C++ Standard](https://img.shields.io/badge/standard-20%2B-blue?style=flat&logo=cplusplus)](https://isocpp.org/std/status)
+[![GitHub license](https://img.shields.io/github/license/suzato/wildcard-matcher)](LICENSE)
+
 A C++ project designed to solve the string matching problem with wildcards ('?' and '\*'). This project features five different algorithmic implementations that can be switched via type aliasing in the source code. It also includes a built-in profiling framework to precisely measure and compare the time and space overhead of each algorithm.
 
 ## Problem Definition
