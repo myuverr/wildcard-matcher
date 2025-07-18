@@ -24,10 +24,10 @@ int main() {
     std::string s, p;
 
     std::cout << "Enter the text string (s): ";
-    std::cin >> s;
+    std::getline(std::cin, s);
 
     std::cout << "Enter the pattern string (p): ";
-    std::cin >> p;
+    std::getline(std::cin, p);
 
     SolverProfile profile = runSolver<SelectedSolver>(s.c_str(), p.c_str());
 
