@@ -29,7 +29,7 @@ int main() {
     std::cout << "Enter the pattern string (p): ";
     std::getline(std::cin, p);
 
-    SolverProfile profile = runSolver<SelectedSolver>(s.c_str(), p.c_str());
+    SolverProfile profile = runSolver<SelectedSolver>(s, p);
 
     if (profile.result) {
         std::cout << "Result: Match Successful" << std::endl;
@@ -38,7 +38,7 @@ int main() {
     }
 
     std::cout << "Performance Metrics:" << std::endl;
-    std::cout << "  - Execution Time: " << profile.time_elapsed_us << " μs" << std::endl;
+    std::cout << "  - Execution Time: " << profile.time_elapsed_us << " us" << std::endl;
     std::cout << "  - Extra Space: " << profile.space_used_bytes << " bytes" << std::endl;
 
     return 0;

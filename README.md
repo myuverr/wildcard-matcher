@@ -77,6 +77,6 @@ This project provides five distinct strategies to solve the wildcard matching pr
   ```
   Result: Match Successful
   Performance Metrics:
-    - Execution Time: ... μs
+    - Execution Time: ... us
     - Extra Space: ... bytes
   ```

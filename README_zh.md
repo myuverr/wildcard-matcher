@@ -77,6 +77,6 @@
   ```
   Result: Match Successful
   Performance Metrics:
-    - Execution Time: ... μs
+    - Execution Time: ... us
     - Extra Space: ... bytes
   ```

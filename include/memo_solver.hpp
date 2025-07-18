@@ -1,7 +1,7 @@
 #pragma once
 
 #include <chrono>
-#include <cstring>
+#include <string_view>
 #include <vector>
 
 #include "wildcard_matcher.hpp"
@@ -29,17 +29,17 @@ class MemoSolver {
    public:
     /**
      * @brief Runs and profiles the memoized recursion algorithm.
-     * @param s The text string to match.
-     * @param p The pattern string containing wildcards '?' and '*'.
+     * @param s The text string view to match.
+     * @param p The pattern string view containing wildcards '?' and '*'.
      * @return A SolverProfile struct containing the match result, time elapsed in microseconds, and
      * extra space used in bytes.
      */
-    static SolverProfile runAndProfile(const char* s, const char* p) {
+    static SolverProfile runAndProfile(std::string_view s, std::string_view p) {
         // 1. Preparation
 
         // 1.1 Calculate lengths
-        int m = strlen(s);
-        int n = strlen(p);
+        int m = s.length();
+        int n = p.length();
 
         // 1.2 Reset depth counters
         current_depth = 0;
@@ -67,7 +67,7 @@ class MemoSolver {
 
         // 4.2 Calculate the maximum space used by the recursion stack
         // Approximate size of each stack frame = 5 params (s, p, i, j, memo) + 1 return address
-        std::size_t space_per_frame = sizeof(const char*) * 2 + sizeof(int) * 2 +
+        std::size_t space_per_frame = sizeof(std::string_view) * 2 + sizeof(int) * 2 +
                                       sizeof(std::vector<std::vector<int>>&) + sizeof(void*);
         std::size_t stack_space = max_depth * space_per_frame;
 
@@ -81,11 +81,11 @@ class MemoSolver {
     /**
      * @brief [private] Checks if the string and pattern match using memoized recursion.
      *
-     * This is the core implementation of the algorithm. It uses a 2D `memo` array
-     * to cache the results of subproblems, avoiding the redundant computations of pure recursion.
+     * This is the core implementation. It uses a 2D `memo` array to cache the results
+     * of subproblems, avoiding the redundant computations of pure recursion.
      *
-     * @param s The original text string.
-     * @param p The original pattern string.
+     * @param s The original text string view.
+     * @param p The original pattern string view.
      * @param i The current index in s.
      * @param j The current index in p.
      * @param m The total length of string s.
@@ -94,8 +94,8 @@ class MemoSolver {
      * @return true if the substring of s from index i matches the subpattern of p from index j,
      * false otherwise.
      */
-    static bool isMatch(const char* s, const char* p, int i, int j, int m, int n,
-                        std::vector<std::vector<int>>& memo) {
+    static bool isMatch(const std::string_view& s, const std::string_view& p, int i, int j, int m,
+                        int n, std::vector<std::vector<int>>& memo) {
         // Create a tracker at the function entry to automatically track recursion depth.
         DepthTracker tracker;
 

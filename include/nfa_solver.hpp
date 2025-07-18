@@ -1,7 +1,7 @@
 #pragma once
 
 #include <chrono>
-#include <cstring>
+#include <string_view>
 #include <vector>
 
 #include "wildcard_matcher.hpp"
@@ -14,15 +14,15 @@ class NFASolver {
    public:
     /**
      * @brief Runs and profiles the state machine-based algorithm.
-     * @param s The text string to match.
-     * @param p The pattern string containing wildcards '?' and '*'.
+     * @param s The text string view to match.
+     * @param p The pattern string view containing wildcards '?' and '*'.
      * @return A SolverProfile struct containing the match result, time elapsed in microseconds, and
      * extra space used in bytes.
      */
-    static SolverProfile runAndProfile(const char* s, const char* p) {
+    static SolverProfile runAndProfile(std::string_view s, std::string_view p) {
         // 1. Preparation: Calculate lengths
-        int m = strlen(s);
-        int n = strlen(p);
+        int m = s.length();
+        int n = p.length();
 
         // 2. Start the timer and execute the core matching logic
         auto start_time = std::chrono::high_resolution_clock::now();
@@ -50,13 +50,13 @@ class NFASolver {
      * the current character of s. With each character from s, the dp array is updated
      * to reflect the new set of states. This is the core implementation of the algorithm.
      *
-     * @param s The text string to match.
-     * @param p The pattern string with wildcards.
+     * @param s The text string view to match.
+     * @param p The pattern string view with wildcards.
      * @param m The length of string s.
      * @param n The length of pattern p.
      * @return true if s and p match completely, false otherwise.
      */
-    static bool isMatch(const char* s, const char* p, int m, int n) {
+    static bool isMatch(std::string_view s, std::string_view p, int m, int n) {
         // dp[j] corresponds to dp[i][j] in the 2D DP approach.
         std::vector<bool> dp(n + 1, false);
 
