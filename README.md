@@ -9,7 +9,12 @@ A C++ project designed to solve the string matching problem with wildcards ('?' 
 
 ## Problem Definition
 
-Determine if an input string `s` (containing only lowercase letters) can be fully matched by a pattern `p` (containing lowercase letters, '?', and '\*').
+Determine if an input string `s` can be fully matched by a pattern `p`, subject to the following constraints:
+
+- **Input** `s`: Must contain only single-byte ASCII characters and cannot contain the wildcard characters `?` or `*`.
+- **Pattern** `p`: Must contain only single-byte ASCII characters. It can include the wildcards `?` and `*`.
+
+**Wildcard Rules:**
 
 - `?` matches any single character.
 - `*` matches any sequence of characters (including an empty sequence).
