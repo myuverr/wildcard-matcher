@@ -2,7 +2,8 @@ English | [中文](README_zh.md)
 
 # Wildcard Matcher
 
-[![C++ Standard](https://img.shields.io/badge/standard-20%2B-blue?style=flat&logo=cplusplus)](https://isocpp.org/std/status)
+[![C++ Standard](https://img.shields.io/badge/C++-20%2B-blue?style=flat&logo=cplusplus)](https://isocpp.org/std/status)
+[![CMake](https://img.shields.io/badge/CMake-3.15%2B-red?style=flat&logo=cmake)](https://cmake.org)
 [![GitHub license](https://img.shields.io/github/license/suzato/wildcard-matcher)](LICENSE)
 
 A C++ project designed to solve the string matching problem with wildcards ('?' and '\*'). This project features five different algorithmic implementations that can be switched via type aliasing in the source code. It also includes a built-in profiling framework to precisely measure and compare the time and space overhead of each algorithm.
@@ -33,50 +34,65 @@ This project provides five distinct strategies to solve the wildcard matching pr
 
 ### Prerequisites
 
+- CMake (version 3.15 or higher)
 - A C++20 compatible compiler (e.g., GCC 10+ or Clang 10+).
 - For Windows users, it is recommended to use the **MinGW-w64** toolchain.
 
-### How to Run
+### How to Build and Run
 
-**Step 1: Compile the Code**
+**Step 1: Build the Executable**
 
-- Open your terminal and use the following command to compile the program:
+1. Create and navigate to a build directory:
 
-  ```bash
-  g++ -std=c++20 src/main.cpp -o wildcard_matcher
-  ```
+   ```shell
+   mkdir build
+   cd build
+   ```
 
-  - `-std=c++20` - Specifies the C++ standard.
-  - `-o wildcard_matcher` - Specifies the output executable name.
+2. Configure the project with CMake.
+
+   On Unix-like systems (Linux, macOS), run:
+
+   ```shell
+   cmake ..
+   ```
+
+   On Windows with MinGW-w64, run:
+
+   ```shell
+   cmake -G "MinGW Makefiles" ..
+   ```
+
+3. Compile the source code:
+
+   ```shell
+   cmake --build .
+   ```
+
+   This will create an executable (`wildcard_matcher`) inside the `build` directory.
 
 **Step 2: Execute the Program**
 
-- Run the compiled executable from your terminal.
+- From within the `build` directory, run the compiled executable.
 - You can select an algorithm using the `--solver` or `-s` command-line option.
 
 To run with the default algorithm (Greedy Two-Pointer):
 
-```bash
+```shell
 ./wildcard_matcher
 ```
 
 To select a specific algorithm (e.g., Dynamic Programming):
 
-```bash
+```shell
 ./wildcard_matcher --solver dp
-```
-
-Or using the short-form alias:
-
-```bash
-./wildcard_matcher -s dp
 ```
 
 - The program will then prompt you to enter the text string `s` and the pattern string `p`.
 
 To view all available options and solvers, use the help command:
 
-```bash
+```shell
 ./wildcard_matcher --help
 ```
 

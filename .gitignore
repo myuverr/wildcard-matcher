@@ -1,6 +1,6 @@
-# Build output directories, anchored to the project root.
-/obj/
-/bin/
+# Build output directories
+.cache/
+build/
 
 # Editor-specific settings
 .vscode/
