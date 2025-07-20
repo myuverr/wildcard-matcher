@@ -3,15 +3,16 @@
 #include <iostream>
 #include <map>
 #include <string>
-#include <string_view>
 
-#include "../include/dp_solver.hpp"
-#include "../include/greedy_solver.hpp"
-#include "../include/memo_solver.hpp"
-#include "../include/nfa_solver.hpp"
-#include "../include/recursive_solver.hpp"
-#include "../include/validator.hpp"
-#include "../include/wildcard_matcher.hpp"
+#include <cxxopts.hpp>
+
+#include "dp_solver.hpp"
+#include "greedy_solver.hpp"
+#include "memo_solver.hpp"
+#include "nfa_solver.hpp"
+#include "recursive_solver.hpp"
+#include "validator.hpp"
+#include "wildcard_matcher.hpp"
 
 /**
  * @struct SolverInfo
@@ -41,38 +42,52 @@ const static std::map<std::string, SolverInfo> solver_registry = {
      {"Greedy Two-Pointer", "Two-pointer greedy algorithm (default).",
       [](const auto& s, const auto& p) { return runSolver<GreedySolver>(s, p); }}}};
 
-void printUsage(const char* prog_name);
-
 int main(int argc, char* argv[]) {
-    std::string solver_choice = "greedy";  // Default solver
+    // --- Command-Line Argument Parsing Setup with cxxopts ---
+    cxxopts::Options options(
+        "wildcard_matcher",
+        "A program to match text against a wildcard pattern using various algorithms.");
 
-    // --- Command-Line Argument Parsing ---
-    for (int i = 1; i < argc; ++i) {
-        std::string_view arg = argv[i];
-        if (arg == "--help" || arg == "-h") {
-            printUsage(argv[0]);
-            return EXIT_SUCCESS;
+    // Improved help text to clarify the relationship between <arg> and the list of solvers.
+    options.add_options()("h,help", "Show this help message and exit.")(
+        "s,solver",
+        "Specify the solver algorithm. <arg> must be one of the names listed in 'Available "
+        "solvers'.",
+        cxxopts::value<std::string>()->default_value("greedy"));
+
+    // Helper lambda to print usage information consistently.
+    auto print_usage = [&options]() {
+        std::cout << options.help() << std::endl;
+        std::cout << "Available solvers:" << std::endl;
+        for (const auto& [name, info] : solver_registry) {
+            printf("  - %-10s: %s\n", name.c_str(), info.description.c_str());
         }
-        if (arg == "--solver" || arg == "-s") {
-            if (i + 1 < argc) {             // Ensure there is a next argument
-                solver_choice = argv[++i];  // Assign next argument and advance index
-            } else {
-                std::cerr << "Error: --solver or -s option requires an argument" << std::endl;
-                printUsage(argv[0]);
-                return EXIT_FAILURE;
-            }
-        } else {
-            std::cerr << "Error: Unknown option '" << arg << std::endl;
-            printUsage(argv[0]);
-            return EXIT_FAILURE;
-        }
+    };
+
+    cxxopts::ParseResult result;
+    // --- Robustly parse arguments and handle any exceptions --
+    try {
+        result = options.parse(argc, argv);
+    } catch (const cxxopts::exceptions::exception& e) {
+        std::cerr << "Error parsing arguments: " << e.what() << std::endl << std::endl;
+        print_usage();
+        return EXIT_FAILURE;
     }
 
-    // --- Validate solver choice by looking it up in the registry ---
+    // --- Handle Help Argument ---
+    if (result.count("help")) {
+        print_usage();
+        return EXIT_SUCCESS;
+    }
+
+    // --- Retrieve and Validate Solver Choice ---
+    const std::string solver_choice = result["solver"].as<std::string>();
     auto it = solver_registry.find(solver_choice);
+
     if (it == solver_registry.end()) {
-        std::cerr << "Error: Unknown solver '" << solver_choice << "' specified" << std::endl;
-        printUsage(argv[0]);
+        std::cerr << "Error: Unknown solver '" << solver_choice << "' specified." << std::endl
+                  << std::endl;
+        print_usage();
         return EXIT_FAILURE;
     }
 
@@ -89,7 +104,7 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;  // Exit on stream error/closure.
     }
 
-    // The text string 's' must not contain wildcard characters.
+    // Input validation for the text string 's'
     invalid_pos = InputValidator::findWildcard(s);
     if (invalid_pos != std::string::npos) {
         std::cerr << "Validation Error: The text string 's' cannot contain wildcard characters"
@@ -99,7 +114,6 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
 
-    // The text string 's' must contain only standard ASCII characters.
     invalid_pos = InputValidator::findMultiByteChar(s);
     if (invalid_pos != std::string::npos) {
         std::cerr << "Validation Error: The text string 's' must contain only single-byte ASCII "
@@ -116,7 +130,7 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;  // Exit on stream error/closure.
     }
 
-    // The pattern string 'p' must contain only standard ASCII characters.
+    // Input validation for the pattern string 'p'
     invalid_pos = InputValidator::findMultiByteChar(p);
     if (invalid_pos != std::string::npos) {
         std::cerr << "Validation Error: The pattern string 'p' must contain only single-byte ASCII "
@@ -142,22 +156,4 @@ int main(int argc, char* argv[]) {
     std::cout << "  - Extra Space: " << profile.space_used_bytes << " bytes" << std::endl;
 
     return EXIT_SUCCESS;
-}
-
-/**
- * @brief Prints the usage instructions for the program.
- *
- * The list of available solvers is dynamically generated from the registry.
- *
- * @param prog_name The name of the executable, taken from argv[0].
- */
-void printUsage(const char* prog_name) {
-    std::cout << "Usage: " << prog_name << " [options]" << std::endl;
-    std::cout << "Options:" << std::endl;
-    std::cout << "  -h, --help                Show this help message and exit." << std::endl;
-    std::cout << "  -s, --solver <name>       Specify the solver algorithm to use." << std::endl;
-    std::cout << "Available solvers:" << std::endl;
-    for (const auto& [name, info] : solver_registry) {
-        printf("  - %-10s: %s\n", name.c_str(), info.description.c_str());
-    }
 }

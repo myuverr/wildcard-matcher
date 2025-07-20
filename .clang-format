@@ -1,9 +1,45 @@
+# Based on the Google C++ Style Guide.
 BasedOnStyle: Google
+
+# Configuration for indentation and tabs.
 TabWidth: 4
 IndentWidth: 4
+
+# Maximum number of characters on a single line.
 ColumnLimit: 100
+
+# Place opening brace on the same line as the declaration.
 BreakBeforeBraces: Attach
+
+# Align trailing comments.
 AlignTrailingComments: true
+
+# Alignment settings for brackets and pointers.
 AlignAfterOpenBracket: Align
 PointerAlignment: Left
+
+# Enable sorting of #include directives.
 SortIncludes: true
+
+# Defines the categorization and sorting priority for #include directives.
+# clang-format automatically assigns priority 0 to the main include file
+# (e.g., for 'foo.cpp', 'foo.h' is the main include).
+IncludeCategories:
+  # Priority 1: C system headers (e.g., <stdio.h>, <sys/types.h>).
+  # These are matched by the '.h' extension and angle brackets.
+  - Regex:           '^<.*\.h>$'
+    Priority:        1
+
+  # Priority 2: C++ standard library headers (e.g., <vector>, <string>).
+  # These are matched by not containing a '.' and being in angle brackets.
+  - Regex:           '^<[^.]*>$'
+    Priority:        2
+
+  # Priority 3: Other library headers (third-party) included with angle brackets
+  # (e.g., <gtest/gtest.h>).
+  - Regex:           '^<.*>$'
+    Priority:        3
+
+  # Priority 4: Project-specific headers included with quotes (e.g., "my_project/utils.h").
+  - Regex:           '^".*"'
+    Priority:        4
