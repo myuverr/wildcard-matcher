@@ -36,52 +36,67 @@
 - 支持 C++20 标准的编译器 (例如 GCC 10+ 或 Clang 10+)。
 - Windows 用户推荐使用 **MinGW-w64** 工具链。
 
+## 开始使用
+
+### 环境要求
+
+- 支持 C++20 标准的编译器（例如 GCC 10+ 或 Clang 10+）。
+- Windows 用户推荐使用 **MinGW-w64** 工具链。
+
 ### 如何运行
 
-**步骤 1：选择算法**
+**步骤 1：编译代码**
 
-- 打开源文件 `src/main.cpp`。
-- 定位到 `using` 类型别名定义处。
-- 将 `SelectedSolver` 修改为您想测试的算法。
-
-  ```cpp
-  // 文件: src/main.cpp
-  using SelectedSolver = GreedySolver; // <-- 修改这一行
-  ```
-
-**步骤 2：编译代码**
-
-- 打开您的终端并使用以下命令编译程序:
+- 打开您的终端并使用以下命令编译程序：
 
   ```bash
   g++ -std=c++20 src/main.cpp -o wildcard_matcher
   ```
 
-  - `-std=c++20` 指定 C++ 标准。
-  - `-o wildcard_matcher` 指定输出的可执行文件名。
+  - `-std=c++20` - 指定 C++ 标准。
+  - `-o wildcard_matcher` - 指定输出的可执行文件名。
 
-**步骤 3：执行程序**
+**步骤 2：执行程序**
 
-- 在终端中运行编译好的可执行文件：
+- 在终端中运行编译好的可执行文件。
+- 你可以通过 `--solver` 或 `-s` 命令行选项来选择算法。
 
-  ```bash
-  ./wildcard_matcher
-  ```
+使用默认算法（双指针贪心法）运行：
 
-- 程序将提示您依次输入文本字符串 `s` 和模式字符串 `p`。
+```bash
+./wildcard_matcher
+```
 
-  ```
-  Enter the text string (s): aab
-  Enter the pattern string (p): a?b*
-  ```
+选择指定算法（例如：动态规划）运行：
 
-**步骤 4：查看结果**
+```bash
+./wildcard_matcher --solver dp
+```
+
+或使用短格式别名：
+
+```bash
+./wildcard_matcher -s dp
+```
+
+- 程序随后将提示您依次输入文本字符串 `s` 和模式字符串 `p`。
+
+要查看所有可用选项和算法列表，请使用帮助命令：
+
+```bash
+./wildcard_matcher --help
+```
+
+**步骤 3：查看结果**
 
 - 程序会输出匹配结果以及所选算法的性能指标。
 
-  ```
-  Result: Match Successful
-  Performance Metrics:
-    - Execution Time: ... us
-    - Extra Space: ... bytes
-  ```
+示例输出：
+
+```
+Result: Match Successful
+Performance Metrics:
+  - Solver Used: Dynamic Programming
+  - Execution Time: ... us
+  - Extra Space: ... bytes
+```

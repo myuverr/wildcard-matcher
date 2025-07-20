@@ -38,18 +38,7 @@ This project provides five distinct strategies to solve the wildcard matching pr
 
 ### How to Run
 
-**Step 1: Select an Algorithm**
-
-- Open the source file `src/main.cpp`.
-- Locate the `using` type alias definition.
-- Change `SelectedSolver` to the algorithm you want to test.
-
-  ```cpp
-  // file: src/main.cpp
-  using SelectedSolver = GreedySolver; // <-- Change this line
-  ```
-
-**Step 2: Compile the Code**
+**Step 1: Compile the Code**
 
 - Open your terminal and use the following command to compile the program:
 
@@ -57,31 +46,50 @@ This project provides five distinct strategies to solve the wildcard matching pr
   g++ -std=c++20 src/main.cpp -o wildcard_matcher
   ```
 
-  - `-std=c++20` specifies the C++ standard.
-  - `-o wildcard_matcher` specifies the output executable name.
+  - `-std=c++20` - Specifies the C++ standard.
+  - `-o wildcard_matcher` - Specifies the output executable name.
 
-**Step 3: Execute the Program**
+**Step 2: Execute the Program**
 
-- Run the compiled executable from your terminal:
+- Run the compiled executable from your terminal.
+- You can select an algorithm using the `--solver` or `-s` command-line option.
 
-  ```bash
-  ./wildcard_matcher
-  ```
+To run with the default algorithm (Greedy Two-Pointer):
 
-- The program will prompt you to enter the text string `s` and the pattern string `p`.
+```bash
+./wildcard_matcher
+```
 
-  ```
-  Enter the text string (s): aab
-  Enter the pattern string (p): a?b*
-  ```
+To select a specific algorithm (e.g., Dynamic Programming):
 
-**Step 4: View the Results**
+```bash
+./wildcard_matcher --solver dp
+```
+
+Or using the short-form alias:
+
+```bash
+./wildcard_matcher -s dp
+```
+
+- The program will then prompt you to enter the text string `s` and the pattern string `p`.
+
+To view all available options and solvers, use the help command:
+
+```bash
+./wildcard_matcher --help
+```
+
+**Step 3: View the Results**
 
 - The program will output the match result and the performance metrics of the selected algorithm.
 
-  ```
-  Result: Match Successful
-  Performance Metrics:
-    - Execution Time: ... us
-    - Extra Space: ... bytes
-  ```
+Example Output:
+
+```
+Result: Match Successful
+Performance Metrics:
+  - Solver Used: Dynamic Programming
+  - Execution Time: ... us
+  - Extra Space: ... bytes
+```
