@@ -18,38 +18,57 @@ class GreedySolver {
      * extra space used in bytes.
      */
     static SolverProfile runAndProfile(std::string_view s, std::string_view p) {
-        // 1. Preparation (no extra setup needed for this algorithm)
+        // Create an instance of the solver
+        // This encapsulates all the state and context for a single run
+        GreedySolver solver(s, p);
+        return solver.run();
+    }
 
-        // 2. Start the timer and execute the core matching logic
+   private:
+    // --- Member variables holding the constant context for a single run ---
+    std::string_view s;
+    std::string_view p;
+
+    /**
+     * @brief [private] Constructor to initialize the solver's context.
+     * @param s_in The text string view to match.
+     * @param p_in The pattern string view to match against.
+     */
+    GreedySolver(std::string_view s_in, std::string_view p_in) : s(s_in), p(p_in) {}
+
+    /**
+     * @brief [private] Runs the core logic and profiling for the instance.
+     * @return A SolverProfile struct.
+     */
+    SolverProfile run() {
+        // 1. Start the timer and execute the core matching logic
         auto start_time = std::chrono::high_resolution_clock::now();
-        bool result = isMatch(s, p);
+        bool result = isMatch();
 
-        // 3. Stop the timer and calculate the duration
+        // 2. Stop the timer and calculate the duration
         auto end_time = std::chrono::high_resolution_clock::now();
         auto duration =
             std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
 
-        // 4. Calculate extra space overhead
-        // The extra space is from the four indices used for traversal and backtracking.
+        // 3. Calculate extra space overhead
+        // The extra space is from the four indices used for traversal and backtracking
         std::size_t space_used = sizeof(size_t) * 4;  // s_idx, p_idx, star_p_idx, s_match_idx
 
-        // 5. Return the struct containing the result and profiling data
+        // 4. Return the struct containing the result and profiling data
         return {result, duration.count(), space_used};
     }
 
-   private:
     /**
      * @brief [private] Checks if the string and pattern match using a two-pointer greedy approach.
      *
      * Uses indices s_idx and p_idx for traversal. When a '*' is encountered, its index (star_p_idx)
      * and the corresponding index in s (s_match_idx) are recorded. If a mismatch occurs later,
-     * the algorithm backtracks using the recorded indices and resumes matching.
+     * the algorithm backtracks using the recorded indices and resumes matching. It uses member
+     * variables for context.
      *
-     * @param s The text string view to match.
-     * @param p The pattern string view with wildcards.
      * @return true if s and p match completely, false otherwise.
      */
-    static bool isMatch(std::string_view s, std::string_view p) {
+    bool isMatch() {
         size_t s_idx = 0;
         size_t p_idx = 0;
         size_t star_p_idx = std::string_view::npos;  // Stores index of last '*' in p

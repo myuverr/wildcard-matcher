@@ -10,23 +10,6 @@
  * @brief Implements the wildcard matching algorithm using recursive backtracking.
  */
 class RecursiveSolver {
-   private:
-    /**
-     * @brief [private] Encapsulates the core state required for the matching logic.
-     */
-    struct MatchingState {
-        std::string_view s;
-        std::string_view p;
-    };
-
-    /**
-     * @brief [private] Encapsulates the state required for performance profiling.
-     */
-    struct ProfilingState {
-        size_t depth;
-        size_t& max_depth;
-    };
-
    public:
     /**
      * @brief Runs and profiles the recursive backtracking algorithm.
@@ -36,67 +19,84 @@ class RecursiveSolver {
      * actual extra space used in bytes.
      */
     static SolverProfile runAndProfile(std::string_view s, std::string_view p) {
-        // 1. Preparation: Reset depth counters
-        size_t max_depth = 0;
+        // Create an instance of the solver
+        // This encapsulates all the state and context for a single run
+        RecursiveSolver solver(s, p);
+        return solver.run();
+    }
 
-        // 2. Start the timer and execute the core matching logic
+   private:
+    // --- Member variables holding the constant context for a single run ---
+    std::string_view s;
+    std::string_view p;
+    int m;
+    int n;
+    size_t max_depth;
+
+    /**
+     * @brief [private] Constructor to initialize the solver's context.
+     * @param s The text string view to match.
+     * @param p The pattern string view to match against.
+     */
+    RecursiveSolver(std::string_view s_in, std::string_view p_in)
+        : s(s_in), p(p_in), m(s_in.length()), n(p_in.length()), max_depth(0) {}
+
+    /**
+     * @brief [private] Runs the core logic and profiling for the instance.
+     * @return A SolverProfile struct.
+     */
+    SolverProfile run() {
+        // 1. Start the timer and execute the core matching logic
         auto start_time = std::chrono::high_resolution_clock::now();
-        bool result = isMatch({s, p}, {0, max_depth});
+        bool result = isMatch(0, 0, 0);
 
-        // 3. Stop the timer and calculate the duration
+        // 2. Stop the timer and calculate the duration
         auto end_time = std::chrono::high_resolution_clock::now();
         auto duration =
             std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
 
-        // 4. Calculate the actual extra space overhead
-        // Space overhead = actual max recursion depth * approximate size of each stack frame.
-        // Each stack frame is estimated to contain: 1 struct arguments + 1 return address.
-        std::size_t space_per_frame = sizeof(MatchingState) + sizeof(void*);
+        // 3. Calculate the actual extra space overhead
+        // Space overhead = actual max recursion depth * approximate size of each stack frame
+        // Each stack frame is estimated to contain: 2 index arguments + 1 return address
+        std::size_t space_per_frame = sizeof(int) * 2 + sizeof(void*);
         std::size_t space_used = max_depth * space_per_frame;
 
-        // 5. Return the struct containing the result and profiling data
+        // 4. Return the struct containing the result and profiling data
         return {result, duration.count(), space_used};
     }
 
-   private:
     /**
-     * @brief [private] The core recursive helper function that is thread-safe.
+     * @brief [private] Checks if the string and pattern match using recursive backtracing.
      *
-     * It tracks recursion depth and other states via struct parameters rather than static
-     * variables, separating matching logic from profiling.
+     * It uses member variables for context and tracks recursion depth for profiling.
      *
-     * @param state The current matching state (s and p).
-     * @param profile The current profiling state (depth and max_depth).
-     * @return true if s and p match completely, false otherwise.
+     * @param i The current index in string s.
+     * @param j The current index in pattern p.
+     * @param depth The current recursion depth.
+     * @return true if s[i:] and p[j:] match completely, false otherwise.
      */
-    static bool isMatch(MatchingState state, ProfilingState profile) {
-        // Update the maximum depth for the current execution context.
-        profile.max_depth = std::max(profile.max_depth, profile.depth);
+    bool isMatch(int i, int j, size_t depth) {
+        // Update the maximum depth for the current execution context
+        max_depth = std::max(max_depth, depth);
 
-        // If p is exhausted, the match is successful only if s is also exhausted.
-        if (state.p.empty()) {
-            return state.s.empty();
+        // If p is exhausted, the match is successful only if s is also exhausted
+        if (j == n) {
+            return i == m;
         }
 
         // If the current character in p is '*'
-        if (state.p.front() == '*') {
-            while (state.p.length() > 1 && state.p[1] == '*') {
-                state.p.remove_prefix(1);
-            }
-
-            // Create two branches:
-            return isMatch({state.s, state.p.substr(1)}, {profile.depth + 1, profile.max_depth}) ||
-                   (!state.s.empty() &&
-                    isMatch({state.s.substr(1), state.p}, {profile.depth + 1, profile.max_depth}));
+        if (p[j] == '*') {
+            // Branch 1: '*' matches an empty sequence (skip '*')
+            // Branch 2: '*' matches one character in s (use '*')
+            return isMatch(i, j + 1, depth + 1) || (i < m && isMatch(i + 1, j, depth + 1));
         }
 
         // If the current character in p is '?' or a regular character
-        if (!state.s.empty() && (state.p.front() == '?' || state.p.front() == state.s.front())) {
-            return isMatch({state.s.substr(1), state.p.substr(1)},
-                           {profile.depth + 1, profile.max_depth});
+        if (i < m && (p[j] == '?' || p[j] == s[i])) {
+            return isMatch(i + 1, j + 1, depth + 1);
         }
 
-        // All other cases are a mismatch.
+        // All other cases are a mismatch
         return false;
     }
 };
