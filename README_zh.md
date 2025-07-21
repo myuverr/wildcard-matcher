@@ -69,7 +69,10 @@
    cmake --build .
    ```
 
-   这将在 `build` 目录内生成一个可执行文件 (`wildcard_matcher`)。
+   这将在 `build` 目录内生成两个可执行文件：
+
+   - `wildcard_matcher`: 主程序。
+   - `run_tests`: 测试套件运行程序。
 
 **步骤 2：执行程序**
 
@@ -109,3 +112,17 @@ Performance Metrics:
   - Execution Time: ... us
   - Extra Space: ... bytes
 ```
+
+**步骤 4：运行单元测试 (可选)**
+
+本项目包含一个使用 GoogleTest 框架构建的综合测试套件，用以确保所有求解器算法的正确性。
+
+1. 首先，请确保您位于 `build` 目录下。
+
+2. 使用 CTest 运行测试：
+
+   ```shell
+   ctest --output-on-failure
+   ```
+
+   该命令会自动发现并执行所有测试，并在测试失败时显示详细输出。

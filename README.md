@@ -69,7 +69,10 @@ This project provides five distinct strategies to solve the wildcard matching pr
    cmake --build .
    ```
 
-   This will create an executable (`wildcard_matcher`) inside the `build` directory.
+   This will create two executables inside the `build` directory:
+
+   - `wildcard_matcher`: The main program.
+   - `run_tests`: The test suite runner.
 
 **Step 2: Execute the Program**
 
@@ -109,3 +112,17 @@ Performance Metrics:
   - Execution Time: ... us
   - Extra Space: ... bytes
 ```
+
+**Step 4: Run the Unit Tests (Optional)**
+
+This project includes a comprehensive test suite built with the GoogleTest framework to ensure the correctness of all solver algorithms.
+
+1. Navigate to the `build` directory.
+
+2. Run the tests using CTest:
+
+   ```shell
+   ctest --output-on-failure
+   ```
+
+   This command will automatically discover and run all tests, reporting any failures.

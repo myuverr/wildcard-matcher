@@ -27,19 +27,19 @@ SortIncludes: true
 IncludeCategories:
   # Priority 1: C system headers (e.g., <stdio.h>, <sys/types.h>).
   # These are matched by the '.h' extension and angle brackets.
-  - Regex:           '^<.*\.h>$'
-    Priority:        1
+  - Regex: '(^<[^/]*\.h>$|^<(sys|arpa|net|netinet)/.*\.h>)$'
+    Priority: 1
 
   # Priority 2: C++ standard library headers (e.g., <vector>, <string>).
   # These are matched by not containing a '.' and being in angle brackets.
-  - Regex:           '^<[^.]*>$'
-    Priority:        2
+  - Regex: "^<[^.]*>$"
+    Priority: 2
 
   # Priority 3: Other library headers (third-party) included with angle brackets
   # (e.g., <gtest/gtest.h>).
-  - Regex:           '^<.*>$'
-    Priority:        3
+  - Regex: "^<.*>$"
+    Priority: 3
 
   # Priority 4: Project-specific headers included with quotes (e.g., "my_project/utils.h").
-  - Regex:           '^".*"'
-    Priority:        4
+  - Regex: '^".*"'
+    Priority: 4
