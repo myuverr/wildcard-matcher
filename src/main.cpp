@@ -6,12 +6,12 @@
 
 #include <cxxopts.hpp>
 
-#include "dp_solver.hpp"
-#include "greedy_solver.hpp"
-#include "memo_solver.hpp"
-#include "nfa_solver.hpp"
-#include "recursive_solver.hpp"
-#include "validator.hpp"
+#include "solvers/dp.hpp"
+#include "solvers/greedy.hpp"
+#include "solvers/memo.hpp"
+#include "solvers/nfa.hpp"
+#include "solvers/recursive.hpp"
+#include "utils/validator.hpp"
 #include "wildcard_matcher.hpp"
 
 /**
