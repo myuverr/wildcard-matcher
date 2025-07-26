@@ -48,22 +48,44 @@ target_link_libraries(wildcard_matcher PRIVATE cxxopts::cxxopts)
 # Enable testing for this project
 enable_testing()
 
-# Add a new executable for your tests
-add_executable(run_tests
-  test/test.cpp
+# --- Parser Tests ---
+add_executable(run_parser_tests
+  test/test_parser.cpp
 )
+target_include_directories(run_parser_tests PUBLIC
+  "${PROJECT_SOURCE_DIR}/include"
+  "${PROJECT_SOURCE_DIR}/test/include"
+)
+target_link_libraries(run_parser_tests PRIVATE GTest::gtest_main)
+add_test(NAME parser_tests COMMAND run_parser_tests)
+set_tests_properties(parser_tests PROPERTIES LABELS "parser")
 
-# Add include directories for the test executable
-# Main project headers
-target_include_directories(run_tests PUBLIC "${PROJECT_SOURCE_DIR}/include")
-# Test-specific headers
-target_include_directories(run_tests PUBLIC "${PROJECT_SOURCE_DIR}/test/include")
+# --- Validator Tests ---
+add_executable(run_validator_tests
+  test/test_validator.cpp
+)
+target_include_directories(run_validator_tests PUBLIC
+  "${PROJECT_SOURCE_DIR}/include"
+  "${PROJECT_SOURCE_DIR}/test/include"
+)
+target_link_libraries(run_validator_tests PRIVATE GTest::gtest_main)
+add_test(NAME validator_tests COMMAND run_validator_tests)
+set_tests_properties(validator_tests PROPERTIES LABELS "validator")
 
-# Link the test executable against GoogleTest and your project's code
-target_link_libraries(run_tests PRIVATE GTest::gtest_main)
+# --- Solvers Tests ---
+add_executable(run_solvers_tests
+  test/test_solvers.cpp
+)
+target_include_directories(run_solvers_tests PUBLIC
+  "${PROJECT_SOURCE_DIR}/include"
+  "${PROJECT_SOURCE_DIR}/test/include"
+)
+target_link_libraries(run_solvers_tests PRIVATE GTest::gtest_main)
+add_test(NAME solver_tests COMMAND run_solvers_tests)
+set_tests_properties(solver_tests PROPERTIES LABELS "solvers")
 
-# Add the test to CTest
+# Discover all tests for each executable
 include(GoogleTest)
-gtest_discover_tests(run_tests
-  PROPERTIES TIMEOUT 60
-)
+gtest_discover_tests(run_parser_tests)
+gtest_discover_tests(run_validator_tests)
+gtest_discover_tests(run_solvers_tests)

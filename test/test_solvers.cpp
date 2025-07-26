@@ -4,7 +4,7 @@
 #include "solvers/greedy.hpp"
 #include "solvers/memo.hpp"
 #include "solvers/recursive.hpp"
-#include "test_cases.hpp"
+#include "test_solver_cases.hpp"
 #include "wildcard_matcher.hpp"
 
 /**
@@ -26,7 +26,7 @@ TYPED_TEST_SUITE_P(WildcardSolverTest);
 /**
  * @brief The core test logic executed for each solver type.
  *
- * This test iterates through a global vector of `WildcardMatchTestCase`
+ * This test iterates through a global vector of `SolverTestCase`
  * instances. For each case, it invokes the `runAndProfile` method of the
  * current solver type (`TypeParam`) and asserts that the result matches
  * the expected outcome. `SCOPED_TRACE` is used to provide detailed context
@@ -38,7 +38,7 @@ TYPED_TEST_P(WildcardSolverTest, MatchesAccordingToDefinedCases) {
     // Verify that the provided type conforms to the concept.
     static_assert(WildcardSolver<SolverType>, "TypeParam must be a valid WildcardSolver.");
 
-    for (const auto& test_case : test_cases) {
+    for (const auto& test_case : solver_test_cases) {
         SCOPED_TRACE((testing::Message()
                       << "Test Case: " << test_case.description << "\n  s: \"" << test_case.text
                       << "\"" << "\n  p: \"" << test_case.pattern << "\""));

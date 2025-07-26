@@ -2,6 +2,10 @@
 
 #include <concepts>
 #include <string_view>
+#include <vector>
+
+// Forward declaration of Token to avoid circular dependency
+struct Token;
 
 struct SolverProfile {
     bool result;
@@ -10,15 +14,15 @@ struct SolverProfile {
 };
 
 // --- Concept Definition ---
-// A type satisfies the WildcardSolver concept if it provides a static runAndProfile method.
+// A type satisfies the WildcardSolver concept if it provides a static runAndProfile method
 template <typename T>
-concept WildcardSolver = requires(std::string_view s, std::string_view p) {
-    { T::runAndProfile(s, p) } -> std::same_as<SolverProfile>;
+concept WildcardSolver = requires(std::string_view s, const std::vector<Token>& p_tokens) {
+    { T::runAndProfile(s, p_tokens) } -> std::same_as<SolverProfile>;
 };
 
 // --- Function Declaration ---
-// The core matching function, templated based on the solver strategy.
+// The core matching function, templated based on the solver strategy
 template <WildcardSolver Solver>
-SolverProfile runSolver(std::string_view s, std::string_view p) {
-    return Solver::runAndProfile(s, p);
+SolverProfile runSolver(std::string_view s, const std::vector<Token>& p_tokens) {
+    return Solver::runAndProfile(s, p_tokens);
 }

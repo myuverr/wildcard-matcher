@@ -34,13 +34,14 @@ This project provides and benchmarks four distinct algorithms—from recursive b
 
 Determine if an input string `s` can be fully matched by a pattern `p`.
 
-- **Input String `s`**: Contains only single-byte ASCII characters (cannot contain `?` or `*`).
-- **Pattern `p`**: Contains single-byte ASCII characters, and can include wildcards `?` and `*`.
+- **Input String `s`**: Contains only single-byte ASCII characters, all of which are treated as literal characters.
+- **Pattern `p`**: Contains single-byte ASCII characters and can include wildcards `?`, `*`, and the escape character `\`.
 
-**Wildcard Rules:**
+**Wildcard & Escape Rules:**
 
 - `?` matches any single character.
 - `*` matches any sequence of characters (including an empty sequence).
+- `\` serves as an escape character, allowing you to match literal `?`, `*`, and `\` characters. For example, the pattern `a\*b` will only match the string "a*b".
 
 ## 🚀 Algorithms Implemented
 
@@ -126,14 +127,26 @@ Performance Metrics:
 
 ## ✅ Testing
 
-A comprehensive test suite is included to verify the correctness of all algorithms.
+A comprehensive test suite is included to verify the correctness of all algorithms. Tests are organized by component and can be run all at once or separately using CTest labels.
 
 ```bash
 # Navigate to the build directory
 cd build
 
-# Run tests using CTest
+# List all available tests
+ctest -N
+
+# Run all tests (default)
 ctest --output-on-failure
+
+# Run only the parser tests
+ctest -L parser
+
+# Run only the validator tests
+ctest -L validator
+
+# Run only the solver algorithm tests
+ctest -L solvers
 ```
 
 ## 📜 License

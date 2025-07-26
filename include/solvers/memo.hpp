@@ -2,9 +2,11 @@
 
 #include <algorithm>
 #include <chrono>
+#include <optional>
 #include <string_view>
 #include <vector>
 
+#include "utils/parser.hpp"
 #include "wildcard_matcher.hpp"
 
 /**
@@ -13,46 +15,58 @@
 class MemoSolver {
    public:
     /**
-     * @brief Runs and profiles the memoized recursion algorithm.
+     * @brief Runs and profiles the memoized algorithm using a raw pattern string.
      * @param s The text string view to match.
-     * @param p The pattern string view containing wildcards '?' and '*'.
-     * @return A SolverProfile struct containing the match result, time elapsed in microseconds, and
-     * extra space used in bytes.
+     * @param p The pattern string view containing wildcards ('?', '*'), literals, and escape
+     * sequences.
+     * @return A SolverProfile struct containing the match result, time elapsed, and space used.
      */
     static SolverProfile runAndProfile(std::string_view s, std::string_view p) {
-        // Create an instance of the solver
-        // This encapsulates all the state and context for a single run
-        MemoSolver solver(s, p);
+        // Parse the raw pattern string into a sequence of tokens.
+        auto tokens = Parser::parse(p).tokens;
+        return runAndProfile(s, tokens);
+    }
+
+    /**
+     * @brief Runs and profiles the memoized algorithm using a pre-parsed token vector.
+     * @param s The text string view to match.
+     * @param p_tokens The tokenized pattern vector.
+     * @return A SolverProfile struct containing the match result, time elapsed, and space used.
+     */
+    static SolverProfile runAndProfile(std::string_view s, const std::vector<Token>& p_tokens) {
+        // Create an instance of the solver with the string and tokenized pattern.
+        MemoSolver solver(s, p_tokens);
         return solver.run();
     }
 
    private:
-    // --- Member variables holding the constant context for a single run ---
-    std::string_view s;
-    std::string_view p;
-    int m;
-    int n;
-    std::vector<std::vector<int>> memo;
-    size_t max_depth;
+    // --- Member variables holding the context for a single run ---
+    const std::string_view s;
+    const std::vector<Token>& p_tokens;
+    const size_t m;
+    const size_t n;
+    mutable std::vector<std::vector<std::optional<bool>>> memo;
+    mutable size_t max_depth;
 
     /**
      * @brief [private] Constructor to initialize the solver's context.
-     * @param s The text string view to match.
-     * @param p The pattern string view to match against.
+     * @param s_in The text string view to match.
+     * @param p_tokens_in The vector of tokens representing the pattern.
      */
-    MemoSolver(std::string_view s_in, std::string_view p_in)
+    MemoSolver(std::string_view s_in, const std::vector<Token>& p_tokens_in)
         : s(s_in),
-          p(p_in),
+          p_tokens(p_tokens_in),
           m(s_in.length()),
-          n(p_in.length()),
-          memo(s_in.length() + 1, std::vector<int>(p_in.length() + 1, -1)),
+          n(p_tokens_in.size()),
+          memo(s_in.length() + 1,
+               std::vector<std::optional<bool>>(p_tokens_in.size() + 1, std::nullopt)),
           max_depth(0) {}
 
     /**
      * @brief [private] Runs the core logic and profiling for the instance.
      * @return A SolverProfile struct.
      */
-    SolverProfile run() {
+    SolverProfile run() const {
         // 1. Start the timer and execute the core matching logic
         auto start_time = std::chrono::high_resolution_clock::now();
         bool result = isMatch(0, 0, 0);
@@ -66,12 +80,11 @@ class MemoSolver {
         // Extra space = memoization table size + max recursion stack depth space
 
         // 3.1 Calculate the size of the memoization table
-        std::size_t memo_space =
-            (static_cast<std::size_t>(m) + 1) * (static_cast<std::size_t>(n) + 1) * sizeof(int);
+        std::size_t memo_space = (m + 1) * (n + 1) * sizeof(decltype(memo[0][0]));
 
         // 3.2 Calculate the maximum space used by the recursion stack
-        // Approximate size of each stack frame = 2 index arguments + 1 return address
-        std::size_t space_per_frame = sizeof(int) * 2 + sizeof(void*);
+        // Each stack frame is estimated to contain: 2 size_t args + 1 return address
+        std::size_t space_per_frame = sizeof(size_t) * 2 + sizeof(void*);
         std::size_t stack_space = max_depth * space_per_frame;
         std::size_t total_space_used = memo_space + stack_space;
 
@@ -80,48 +93,67 @@ class MemoSolver {
     }
 
     /**
-     * @brief [private] Checks if the string and pattern match using memoized recursion.
+     * @brief [private] Checks if the string and tokenized pattern match using memoized recursion.
      *
-     * It uses member variables for context (s, p, memo) and takes only indices as parameters.
+     * It uses member variables for context (s, p_tokens, memo) and takes only indices as
+     * parameters.
      *
-     * @param i The current index in string s.
-     * @param j The current index in pattern p.
-     * @param depth The current recursion depth for profiling.
-     * @return true if the substring of s from index i matches the subpattern of p from index j,
-     * false otherwise.
+     * @param i The current index in the input string `s`.
+     * @param j The current index in the token pattern `p_tokens`.
+     * @param depth The current recursion depth, used for space profiling.
+     * @return true if s[i:] and p_tokens[j:] match, false otherwise.
      */
-    bool isMatch(int i, int j, size_t depth) {
-        // Update the maximum depth for the current execution context
+    bool isMatch(size_t i, size_t j, size_t depth) const {
+        // Update the maximum recursion depth reached for profiling purposes
         max_depth = std::max(max_depth, depth);
 
-        // Check the memoization table.
-        // If the subproblem is already solved, return the result directly
-        if (memo[i][j] != -1) {
-            return memo[i][j] == 1;
+        // If the subproblem is already solved, return the cached result
+        if (memo[i][j].has_value()) {
+            return *memo[i][j];
         }
 
         bool ans = false;
 
-        // Pattern p is exhausted
+        // Base case: If the pattern is exhausted, the match is successful only
+        // if the string is also exhausted
         if (j == n) {
             ans = (i == m);
         } else {
-            // Check if the current characters match
-            bool first_match = (i < m && (p[j] == '?' || p[j] == s[i]));
+            const Token& current_token = p_tokens[j];
 
-            if (p[j] == '*') {
-                // If p[j] is '*':
-                // Branch 1: '*' matches an empty sequence
-                // Branch 2: '*' matches s[i]
-                ans = isMatch(i, j + 1, depth + 1) || (i < m && isMatch(i + 1, j, depth + 1));
-            } else {
-                // If p[j] is a regular character or '?'
-                ans = first_match && isMatch(i + 1, j + 1, depth + 1);
+            switch (current_token.type) {
+                case TokenType::ANY_SEQUENCE:  // Corresponds to '*'
+                    // Branch 1: The '*' matches an empty sequence. Skip the '*' token.
+                    // Branch 2: The '*' matches one character. Consume a character from the string
+                    // and stay at the same '*' token
+                    ans = isMatch(i, j + 1, depth + 1) || (i < m && isMatch(i + 1, j, depth + 1));
+                    break;
+
+                case TokenType::ANY_CHAR:  // Corresponds to '?'
+                    // If the string is not exhausted, this token matches the current character
+                    ans = (i < m && isMatch(i + 1, j + 1, depth + 1));
+                    break;
+
+                case TokenType::LITERAL_SEQUENCE: {
+                    const std::string& literal = *current_token.value;
+                    const size_t literal_len = literal.length();
+
+                    // Check if the string has enough characters remaining to match the literal
+                    // and if the substring matches
+                    if (i + literal_len <= m && s.compare(i, literal_len, literal) == 0) {
+                        // If it matches, continue matching from the end of the literal sequence
+                        ans = isMatch(i + literal_len, j + 1, depth + 1);
+                    } else {
+                        // The literal does not match
+                        ans = false;
+                    }
+                    break;
+                }
             }
         }
 
         // Store the result in the memoization table before returning
-        memo[i][j] = ans ? 1 : 0;
+        memo[i][j] = ans;
         return ans;
     }
 };

@@ -4,10 +4,10 @@
 #include <vector>
 
 /**
- * @struct WildcardMatchTestCase
- * @brief  Defines a single test case for the wildcard matching problem.
+ * @struct SolverTestCase
+ * @brief  Defines a single test case for a wildcard matching solver.
  */
-struct WildcardMatchTestCase {
+struct SolverTestCase {
     std::string text;
     std::string pattern;
     bool expected_result;
@@ -15,7 +15,7 @@ struct WildcardMatchTestCase {
 };
 
 // A comprehensive collection of test cases to validate solver correctness.
-const std::vector<WildcardMatchTestCase> test_cases = {
+const std::vector<SolverTestCase> solver_test_cases = {
     // --- Basic & Boundary Cases ---
     {"test", "test", true, "Exact match: No wildcards, identical strings."},
     {"test", "text", false, "Exact mismatch: No wildcards, different characters."},
