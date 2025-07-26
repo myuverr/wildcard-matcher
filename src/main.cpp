@@ -6,12 +6,11 @@
 
 #include <cxxopts.hpp>
 
-#include "dp_solver.hpp"
-#include "greedy_solver.hpp"
-#include "memo_solver.hpp"
-#include "nfa_solver.hpp"
-#include "recursive_solver.hpp"
-#include "validator.hpp"
+#include "solvers/dp.hpp"
+#include "solvers/greedy.hpp"
+#include "solvers/memo.hpp"
+#include "solvers/recursive.hpp"
+#include "utils/validator.hpp"
 #include "wildcard_matcher.hpp"
 
 /**
@@ -35,9 +34,6 @@ const static std::map<std::string, SolverInfo> solver_registry = {
     {"dp",
      {"Dynamic Programming", "Dynamic programming algorithm.",
       [](const auto& s, const auto& p) { return runSolver<DpSolver>(s, p); }}},
-    {"nfa",
-     {"NFA (State Machine)", "State machine (space-optimized DP) algorithm.",
-      [](const auto& s, const auto& p) { return runSolver<NFASolver>(s, p); }}},
     {"greedy",
      {"Greedy Two-Pointer", "Two-pointer greedy algorithm (default).",
       [](const auto& s, const auto& p) { return runSolver<GreedySolver>(s, p); }}}};

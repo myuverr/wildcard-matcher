@@ -1,10 +1,9 @@
 #include <gtest/gtest.h>
 
-#include "dp_solver.hpp"
-#include "greedy_solver.hpp"
-#include "memo_solver.hpp"
-#include "nfa_solver.hpp"
-#include "recursive_solver.hpp"
+#include "solvers/dp.hpp"
+#include "solvers/greedy.hpp"
+#include "solvers/memo.hpp"
+#include "solvers/recursive.hpp"
 #include "test_cases.hpp"
 #include "wildcard_matcher.hpp"
 
@@ -54,8 +53,7 @@ TYPED_TEST_P(WildcardSolverTest, MatchesAccordingToDefinedCases) {
 REGISTER_TYPED_TEST_SUITE_P(WildcardSolverTest, MatchesAccordingToDefinedCases);
 
 // A type list containing all solver classes to be tested.
-using SolverImplementations =
-    ::testing::Types<RecursiveSolver, MemoSolver, DpSolver, NFASolver, GreedySolver>;
+using SolverImplementations = ::testing::Types<RecursiveSolver, MemoSolver, DpSolver, GreedySolver>;
 
 // Instantiate the test suite for each type in the SolverImplementations list.
 // The first argument is a user-defined prefix for the test suite name in the final output.
