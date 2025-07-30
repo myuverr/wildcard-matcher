@@ -30,22 +30,51 @@ struct Token {
 };
 
 /**
+ * @brief Defines machine-readable codes for different parsing warnings.
+ */
+enum class WarningCode {
+    UNDEFINED_ESCAPE_SEQUENCE,  // For sequences like '\a' where 'a' is not a special char
+    TRAILING_BACKSLASH          // For a backslash at the very end of the pattern
+};
+
+/**
+ * @brief A struct to encapsulate a single warning message.
+ *
+ * It contains a machine-readable code, a human-readable message, and the 0-based
+ * index in the raw pattern string where the issue was found.
+ */
+struct Warning {
+    WarningCode code;
+    std::string message;
+    size_t position;
+};
+
+/**
+ * @brief A struct to hold the complete result of a parsing operation.
+ */
+struct ParseResult {
+    std::vector<Token> tokens;
+    std::vector<Warning> warnings;
+};
+
+/**
  * @brief A parser that converts a wildcard pattern string into a sequence of tokens.
  */
 class Parser {
    public:
     /**
-     * @brief Parses a pattern string view into a vector of tokens.
-     * @param p The pattern string view containing literals and wildcards ('?', '*').
-     * @return A std::vector<Token> representing the structured pattern.
+     * @brief Parses a pattern string view into a structured result containing tokens and warnings.
+     * @param p The pattern string view containing literals, wildcards ('?', '*'), and escape
+     * sequences.
+     * @return A ParseResult struct containing the tokenized pattern and a vector of warnings.
      */
-    static std::vector<Token> parse(std::string_view p) {
-        std::vector<Token> tokens;
+    static ParseResult parse(std::string_view p) {
+        ParseResult result;
         if (p.empty()) {
-            return tokens;
+            return result;
         }
 
-        // A temporary builder for merging consecutive literal characters.
+        // A temporary builder for merging consecutive literal characters
         std::string literal_builder;
 
         /**
@@ -55,8 +84,8 @@ class Parser {
          */
         auto flush_literal_builder = [&]() {
             if (!literal_builder.empty()) {
-                tokens.push_back({TokenType::LITERAL_SEQUENCE, std::move(literal_builder)});
-                literal_builder.clear();  // Reset for the next sequence.
+                result.tokens.push_back({TokenType::LITERAL_SEQUENCE, std::move(literal_builder)});
+                literal_builder.clear();  // Reset for the next sequence
             }
         };
 
@@ -66,38 +95,58 @@ class Parser {
             switch (current_char) {
                 case '?':
                     flush_literal_builder();
-                    tokens.push_back({TokenType::ANY_CHAR});
+                    result.tokens.push_back({TokenType::ANY_CHAR});
                     break;
 
                 case '*':
                     flush_literal_builder();
-                    // Merge consecutive '*' by only adding if the previous token wasn't also '*'.
-                    if (tokens.empty() || tokens.back().type != TokenType::ANY_SEQUENCE) {
-                        tokens.push_back({TokenType::ANY_SEQUENCE});
+                    // Merge consecutive '*' by only adding if the previous token wasn't also '*'
+                    if (result.tokens.empty() ||
+                        result.tokens.back().type != TokenType::ANY_SEQUENCE) {
+                        result.tokens.push_back({TokenType::ANY_SEQUENCE});
                     }
                     break;
 
                 case '\\':
-                    // Handle escape sequence. The next character is treated as a literal.
+                    // --- Updated Escape Sequence Handling with Warnings ---
                     if (i + 1 < p.length()) {
-                        literal_builder += p[i + 1];  // Append the escaped character.
-                        i++;                          // Skip the next character in the loop.
+                        char next_char = p[i + 1];
+                        // Check for undefined escape sequences. A "defined" escape is one that
+                        // escapes a character with special meaning ('*', '?', '\')
+                        if (next_char != '*' && next_char != '?' && next_char != '\\') {
+                            result.warnings.push_back({WarningCode::UNDEFINED_ESCAPE_SEQUENCE,
+                                                       "Undefined escape sequence '\\" +
+                                                           std::string(1, next_char) +
+                                                           "'. The backslash is ignored and the "
+                                                           "character is treated as a "
+                                                           "literal.",
+                                                       i});
+                        }
+                        // Regardless of warning, the escaped character is treated as a literal
+                        literal_builder += next_char;
+                        i++;  // Skip the next character in the loop
                     } else {
-                        // A trailing backslash is treated as a literal backslash.
+                        // A trailing backslash is now a formal warning
+                        result.warnings.push_back(
+                            {WarningCode::TRAILING_BACKSLASH,
+                             "Pattern ends with a trailing backslash. It is treated as a literal "
+                             "'\\' character.",
+                             i});
+                        // The trailing backslash itself is treated as a literal
                         literal_builder += current_char;
                     }
                     break;
 
                 default:
-                    // This is a standard literal character.
+                    // This is a standard literal character
                     literal_builder += current_char;
                     break;
             }
         }
 
-        // After the loop, there might be a pending literal sequence.
+        // After the loop, there might be a pending literal sequence
         flush_literal_builder();
 
-        return tokens;
+        return result;
     }
 };

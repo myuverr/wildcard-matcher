@@ -22,7 +22,7 @@ class RecursiveSolver {
      */
     static SolverProfile runAndProfile(std::string_view s, std::string_view p) {
         // parse the raw pattern string into a sequence of tokens
-        auto tokens = Parser::parse(p);
+        auto tokens = Parser::parse(p).tokens;
         return runAndProfile(s, tokens);
     }
 
