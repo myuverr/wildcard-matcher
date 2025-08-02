@@ -5,6 +5,8 @@
 #include <string_view>
 #include <vector>
 
+#include "utils/issues.hpp"
+
 /**
  * @brief Defines the types of tokens that can be produced by the parser.
  *
@@ -30,43 +32,31 @@ struct Token {
 };
 
 /**
- * @brief Defines machine-readable codes for different parsing warnings.
+ * @brief Raw information about a potential issue discovered during parsing.
  */
-enum class WarningCode {
-    UNDEFINED_ESCAPE_SEQUENCE,  // For sequences like '\a' where 'a' is not a special char
-    TRAILING_BACKSLASH          // For a backslash at the very end of the pattern
+struct ParseEvent {
+    IssueCode code;
+    size_t position;                    // 1-based position of the event in the raw pattern string.
+    std::optional<std::string> detail;  // e.g., the specific character in an escape sequence.
 };
 
 /**
- * @brief A struct to encapsulate a single warning message.
- *
- * It contains a machine-readable code, a human-readable message, and the 0-based
- * index in the raw pattern string where the issue was found.
- */
-struct Warning {
-    WarningCode code;
-    std::string message;
-    size_t position;
-};
-
-/**
- * @brief A struct to hold the complete result of a parsing operation.
+ * @brief Holds the result of a parsing operation: tokens and raw parse events.
  */
 struct ParseResult {
     std::vector<Token> tokens;
-    std::vector<Warning> warnings;
+    std::vector<ParseEvent> events;
 };
 
 /**
- * @brief A parser that converts a wildcard pattern string into a sequence of tokens.
+ * @brief A parser that converts a wildcard pattern string into tokens and raw events.
  */
 class Parser {
    public:
     /**
-     * @brief Parses a pattern string view into a structured result containing tokens and warnings.
-     * @param p The pattern string view containing literals, wildcards ('?', '*'), and escape
-     * sequences.
-     * @return A ParseResult struct containing the tokenized pattern and a vector of warnings.
+     * @brief Parses a pattern string view, generating tokens and raw events.
+     * @param p The pattern string view.
+     * @return A ParseResult struct containing tokens and raw parse events.
      */
     static ParseResult parse(std::string_view p) {
         ParseResult result;
@@ -101,39 +91,30 @@ class Parser {
                 case '*':
                     flush_literal_builder();
                     // Merge consecutive '*' by only adding if the previous token wasn't also '*'
-                    if (result.tokens.empty() ||
-                        result.tokens.back().type != TokenType::ANY_SEQUENCE) {
+                    if (!result.tokens.empty() &&
+                        result.tokens.back().type == TokenType::ANY_SEQUENCE) {
+                        result.events.push_back({IssueCode::CONSECUTIVE_ASTERISKS_MERGED, i + 1});
+                    } else {
                         result.tokens.push_back({TokenType::ANY_SEQUENCE});
                     }
                     break;
 
                 case '\\':
-                    // --- Updated Escape Sequence Handling with Warnings ---
+                    flush_literal_builder();
                     if (i + 1 < p.length()) {
                         char next_char = p[i + 1];
                         // Check for undefined escape sequences. A "defined" escape is one that
                         // escapes a character with special meaning ('*', '?', '\')
                         if (next_char != '*' && next_char != '?' && next_char != '\\') {
-                            result.warnings.push_back({WarningCode::UNDEFINED_ESCAPE_SEQUENCE,
-                                                       "Undefined escape sequence '\\" +
-                                                           std::string(1, next_char) +
-                                                           "'. The backslash is ignored and the "
-                                                           "character is treated as a "
-                                                           "literal.",
-                                                       i});
+                            result.events.push_back({IssueCode::UNDEFINED_ESCAPE_SEQUENCE, i + 1,
+                                                     std::string(1, next_char)});
                         }
-                        // Regardless of warning, the escaped character is treated as a literal
+                        // Still treat as literal for potential recovery
                         literal_builder += next_char;
                         i++;  // Skip the next character in the loop
                     } else {
-                        // A trailing backslash is now a formal warning
-                        result.warnings.push_back(
-                            {WarningCode::TRAILING_BACKSLASH,
-                             "Pattern ends with a trailing backslash. It is treated as a literal "
-                             "'\\' character.",
-                             i});
-                        // The trailing backslash itself is treated as a literal
-                        literal_builder += current_char;
+                        // A trailing backslash event
+                        result.events.push_back({IssueCode::TRAILING_BACKSLASH, i + 1});
                     }
                     break;
 
