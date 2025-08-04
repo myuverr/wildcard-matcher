@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <string_view>
+#include <variant>
 #include <vector>
 
 #include "utils/parser.hpp"
@@ -90,7 +91,7 @@ class DpSolver {
 
         // When s is empty, p_tokens can only match if it consists of only '*' tokens
         for (size_t j = 1; j <= n; ++j) {
-            if (p_tokens[j - 1].type == TokenType::ANY_SEQUENCE) {
+            if (std::holds_alternative<AnySequence>(p_tokens[j - 1])) {
                 dp[0][j] = dp[0][j - 1];
             }
         }
@@ -98,35 +99,32 @@ class DpSolver {
         // Fill the DP table
         for (size_t i = 1; i <= m; ++i) {
             for (size_t j = 1; j <= n; ++j) {
-                const Token& current_token = p_tokens[j - 1];
-                switch (current_token.type) {
-                    case TokenType::ANY_SEQUENCE:
-                        // The '*' token can either match an empty sequence (dp[i][j-1]) or match
-                        // the current character s[i-1] (dp[i-1][j])
-                        dp[i][j] = dp[i][j - 1] || dp[i - 1][j];
-                        break;
-
-                    case TokenType::ANY_CHAR:
-                        // The '?' token matches any single character, so the result depends on the
-                        // subproblem without the current character and token
-                        dp[i][j] = dp[i - 1][j - 1];
-                        break;
-
-                    case TokenType::LITERAL_SEQUENCE: {
-                        const std::string& literal = *current_token.value;
-                        const size_t literal_len = literal.length();
-                        // Check if the string has enough preceding characters and if the substring
-                        // ending at s[i-1] matches the literal
-                        if (i >= literal_len &&
-                            s.compare(i - literal_len, literal_len, literal) == 0) {
-                            // If they match, the result depends on the state before this literal
-                            // match
-                            dp[i][j] = dp[i - literal_len][j - 1];
+                std::visit(
+                    [&](const auto& token) {
+                        using T = std::decay_t<decltype(token)>;
+                        if constexpr (std::is_same_v<T, AnySequence>) {
+                            // The '*' token can either match an empty sequence (dp[i][j-1]) or
+                            // match the current character s[i-1] (dp[i-1][j])
+                            dp[i][j] = dp[i][j - 1] || dp[i - 1][j];
+                        } else if constexpr (std::is_same_v<T, AnyChar>) {
+                            // The '?' token matches any single character, so the result depends on
+                            // the subproblem without the current character and token
+                            dp[i][j] = dp[i - 1][j - 1];
+                        } else if constexpr (std::is_same_v<T, LiteralSequence>) {
+                            const std::string& literal = token.value;
+                            const size_t literal_len = literal.length();
+                            // Check if the string has enough preceding characters and if the
+                            // substring ending at s[i-1] matches the literal
+                            if (i >= literal_len &&
+                                s.compare(i - literal_len, literal_len, literal) == 0) {
+                                // If they match, the result depends on the state before this
+                                // literal match
+                                dp[i][j] = dp[i - literal_len][j - 1];
+                            }
+                            // else, dp[i][j] remains false
                         }
-                        // else, dp[i][j] remains false
-                        break;
-                    }
-                }
+                    },
+                    p_tokens[j - 1]);
             }
         }
 

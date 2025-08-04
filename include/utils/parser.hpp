@@ -3,33 +3,11 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <variant>
 #include <vector>
 
 #include "utils/issues.hpp"
-
-/**
- * @brief Defines the types of tokens that can be produced by the parser.
- *
- * This enum provides clear, semantic names for each component of the parsed pattern.
- */
-enum class TokenType {
-    LITERAL_SEQUENCE,  // Represents a sequence of one or more literal characters.
-    ANY_CHAR,          // Represents the '?' wildcard, which matches any single character.
-    ANY_SEQUENCE       // Represents the '*' wildcard, which matches any sequence of characters.
-};
-
-/**
- * @brief Represents a token in the parsed pattern.
- *
- * Each token has a type and an optional value. The value is used for LITERAL_SEQUENCE
- * to store the actual string of characters.
- */
-struct Token {
-    TokenType type;
-    // Stores the character sequence for LITERAL_SEQUENCE tokens.
-    std::optional<std::string> value = std::nullopt;
-    bool operator==(const Token& other) const = default;
-};
+#include "utils/token.hpp"
 
 /**
  * @brief Raw information about a potential issue discovered during parsing.
@@ -47,6 +25,7 @@ struct ParseEvent {
 struct ParseResult {
     std::vector<Token> tokens;
     std::vector<ParseEvent> events;
+    bool operator==(const ParseResult& other) const = default;
 };
 
 /**
@@ -70,12 +49,12 @@ class Parser {
 
         /**
          * @brief A helper lambda to flush the content of the literal_builder.
-         * If the builder contains characters, it creates a LITERAL_SEQUENCE token,
+         * If the builder contains characters, it creates a LiteralSequence token,
          * adds it to the token list, and clears the builder.
          */
         auto flush_literal_builder = [&]() {
             if (!literal_builder.empty()) {
-                result.tokens.push_back({TokenType::LITERAL_SEQUENCE, std::move(literal_builder)});
+                result.tokens.push_back(LiteralSequence{std::move(literal_builder)});
                 literal_builder.clear();  // Reset for the next sequence
             }
         };
@@ -86,17 +65,17 @@ class Parser {
             switch (current_char) {
                 case '?':
                     flush_literal_builder();
-                    result.tokens.push_back({TokenType::ANY_CHAR});
+                    result.tokens.push_back(AnyChar{});
                     break;
 
                 case '*':
                     flush_literal_builder();
                     // Merge consecutive '*' by only adding if the previous token wasn't also '*'
                     if (!result.tokens.empty() &&
-                        result.tokens.back().type == TokenType::ANY_SEQUENCE) {
+                        std::holds_alternative<AnySequence>(result.tokens.back())) {
                         result.events.push_back({IssueCode::CONSECUTIVE_ASTERISKS_MERGED, i + 1});
                     } else {
-                        result.tokens.push_back({TokenType::ANY_SEQUENCE});
+                        result.tokens.push_back(AnySequence{});
                     }
                     break;
 

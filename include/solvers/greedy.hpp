@@ -3,6 +3,7 @@
 #include <chrono>
 #include <optional>
 #include <string_view>
+#include <variant>
 #include <vector>
 
 #include "utils/parser.hpp"
@@ -95,28 +96,37 @@ class GreedySolver {
         std::optional<BacktrackPoint> backtrack_point;
 
         while (s_idx < m) {
-            // Case 1: A direct match is found (ANY_CHAR or a matching LITERAL_SEQUENCE)
+            // Case 1: A direct match is found (AnyChar or a matching LiteralSequence)
             if (p_idx < n) {
-                const Token& token = p_tokens[p_idx];
-                if (token.type == TokenType::ANY_CHAR) {
-                    s_idx++;
-                    p_idx++;
+                bool matched = std::visit(
+                    [&](const auto& token) {
+                        using T = std::decay_t<decltype(token)>;
+                        if constexpr (std::is_same_v<T, AnyChar>) {
+                            s_idx++;
+                            p_idx++;
+                            return true;
+                        } else if constexpr (std::is_same_v<T, LiteralSequence>) {
+                            const std::string& literal = token.value;
+                            const size_t literal_len = literal.length();
+                            if (m - s_idx >= literal_len &&
+                                s.compare(s_idx, literal_len, literal) == 0) {
+                                s_idx += literal_len;
+                                p_idx++;
+                                return true;
+                            }
+                        }
+                        return false;  // No match for this type or condition failed
+                    },
+                    p_tokens[p_idx]);
+
+                if (matched) {
                     continue;
-                }
-                if (token.type == TokenType::LITERAL_SEQUENCE) {
-                    const std::string& literal = *token.value;
-                    const size_t literal_len = literal.length();
-                    if (m - s_idx >= literal_len && s.compare(s_idx, literal_len, literal) == 0) {
-                        s_idx += literal_len;
-                        p_idx++;
-                        continue;
-                    }
                 }
             }
 
-            // Case 2: If a direct match fails, check for an ANY_SEQUENCE ('*') token
+            // Case 2: If a direct match fails, check for an AnySequence ('*') token
             // Record its position and the current string index as an atomic backtrack point
-            if (p_idx < n && p_tokens[p_idx].type == TokenType::ANY_SEQUENCE) {
+            if (p_idx < n && std::holds_alternative<AnySequence>(p_tokens[p_idx])) {
                 backtrack_point = {p_idx, s_idx};
                 p_idx++;
             }
@@ -135,7 +145,7 @@ class GreedySolver {
         }
 
         // The string is exhausted. Consume any trailing ANY_SEQUENCE tokens in the pattern
-        while (p_idx < n && p_tokens[p_idx].type == TokenType::ANY_SEQUENCE) {
+        while (p_idx < n && std::holds_alternative<AnySequence>(p_tokens[p_idx])) {
             p_idx++;
         }
 

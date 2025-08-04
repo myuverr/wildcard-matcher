@@ -4,8 +4,10 @@
 #include <chrono>
 #include <optional>
 #include <string_view>
+#include <variant>
 #include <vector>
 
+#include "utils/compiler.hpp"
 #include "utils/parser.hpp"
 #include "wildcard_matcher.hpp"
 
@@ -119,41 +121,38 @@ class MemoSolver {
         if (j == n) {
             ans = (i == m);
         } else {
-            const Token& current_token = p_tokens[j];
+            ans = std::visit(
+                [&](const auto& token) {
+                    using T = std::decay_t<decltype(token)>;
+                    if constexpr (std::is_same_v<T, AnySequence>) {
+                        // Branch 1: The '*' matches an empty sequence. Skip the '*' token.
+                        // Branch 2: The '*' matches one character. Consume a character from the
+                        // string and stay at the same '*' token
+                        return isMatch(i, j + 1, depth + 1) ||
+                               (i < m && isMatch(i + 1, j, depth + 1));
+                    } else if constexpr (std::is_same_v<T, AnyChar>) {
+                        // If the string is not exhausted, this token matches the current character
+                        return i < m && isMatch(i + 1, j + 1, depth + 1);
+                    } else if constexpr (std::is_same_v<T, LiteralSequence>) {
+                        const std::string& literal = token.value;
+                        const size_t literal_len = literal.length();
 
-            switch (current_token.type) {
-                case TokenType::ANY_SEQUENCE:  // Corresponds to '*'
-                    // Branch 1: The '*' matches an empty sequence. Skip the '*' token.
-                    // Branch 2: The '*' matches one character. Consume a character from the string
-                    // and stay at the same '*' token
-                    ans = isMatch(i, j + 1, depth + 1) || (i < m && isMatch(i + 1, j, depth + 1));
-                    break;
-
-                case TokenType::ANY_CHAR:  // Corresponds to '?'
-                    // If the string is not exhausted, this token matches the current character
-                    ans = (i < m && isMatch(i + 1, j + 1, depth + 1));
-                    break;
-
-                case TokenType::LITERAL_SEQUENCE: {
-                    const std::string& literal = *current_token.value;
-                    const size_t literal_len = literal.length();
-
-                    // Check if the string has enough characters remaining to match the literal
-                    // and if the substring matches
-                    if (i + literal_len <= m && s.compare(i, literal_len, literal) == 0) {
-                        // If it matches, continue matching from the end of the literal sequence
-                        ans = isMatch(i + literal_len, j + 1, depth + 1);
-                    } else {
-                        // The literal does not match
-                        ans = false;
+                        // Check if the string has enough characters remaining to match the literal
+                        // and if the substring matches
+                        if (i + literal_len <= m && s.compare(i, literal_len, literal) == 0) {
+                            // If it matches, continue matching from the end of the literal sequence
+                            return isMatch(i + literal_len, j + 1, depth + 1);
+                        } else {
+                            // The literal does not match
+                            return false;
+                        }
                     }
-                    break;
-                }
-            }
+                    APP_UNREACHABLE();  // Should not be reached
+                },
+                p_tokens[j]);
         }
 
         // Store the result in the memoization table before returning
-        memo[i][j] = ans;
-        return ans;
+        return *(memo[i][j] = ans);
     }
 };

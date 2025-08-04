@@ -4,8 +4,7 @@
 #include <string_view>
 #include <vector>
 
-// Forward declaration of Token to avoid circular dependency
-struct Token;
+#include "utils/token.hpp"
 
 struct SolverProfile {
     bool result;

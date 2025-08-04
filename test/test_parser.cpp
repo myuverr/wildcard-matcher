@@ -8,7 +8,6 @@
 #include "utils/parser.hpp"
 
 namespace {
-
 /**
  * @class ParserTest
  * @brief A parameterized test fixture for the Parser class.
@@ -21,8 +20,7 @@ TEST_P(ParserTest, CorrectlyTokenizesAndIdentifiesEvents) {
     SCOPED_TRACE(test_case.description);  // Provides context on failure.
 
     ParseResult actual_result = Parser::parse(test_case.pattern);
-    EXPECT_EQ(actual_result.tokens, test_case.expected_result.tokens);
-    EXPECT_EQ(actual_result.events, test_case.expected_result.events);
+    EXPECT_EQ(actual_result, test_case.expected_result);
 }
 
 // Instantiate the test suite with all the defined test cases.
