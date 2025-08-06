@@ -73,7 +73,7 @@ class Parser {
                     // Merge consecutive '*' by only adding if the previous token wasn't also '*'
                     if (!result.tokens.empty() &&
                         std::holds_alternative<AnySequence>(result.tokens.back())) {
-                        result.events.push_back({IssueCode::CONSECUTIVE_ASTERISKS_MERGED, i + 1});
+                        result.events.push_back({IssueCode::ConsecutiveAsterisksMerged, i + 1});
                     } else {
                         result.tokens.push_back(AnySequence{});
                     }
@@ -85,7 +85,7 @@ class Parser {
                         // Check for undefined escape sequences. A "defined" escape is one that
                         // escapes a character with special meaning ('*', '?', '\')
                         if (next_char != '*' && next_char != '?' && next_char != '\\') {
-                            result.events.push_back({IssueCode::UNDEFINED_ESCAPE_SEQUENCE, i + 1,
+                            result.events.push_back({IssueCode::UndefinedEscapeSequence, i + 1,
                                                      std::string(1, next_char)});
                         }
                         // Still treat as literal for potential recovery
@@ -93,7 +93,7 @@ class Parser {
                         i++;  // Skip the next character in the loop
                     } else {
                         // A trailing backslash event
-                        result.events.push_back({IssueCode::TRAILING_BACKSLASH, i + 1});
+                        result.events.push_back({IssueCode::TrailingBackslash, i + 1});
                     }
                     break;
 

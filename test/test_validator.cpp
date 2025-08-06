@@ -25,7 +25,7 @@ TEST_F(ValidatorTest, DetectsMultiByteCharacter) {
     auto issues = Validator::validateRawString("abc©def");
     ASSERT_EQ(issues.size(), 1);
     const auto& issue = issues[0];
-    EXPECT_EQ(issue.code, IssueCode::MULTIBYTE_CHARACTER_NOT_ALLOWED);
+    EXPECT_EQ(issue.code, IssueCode::MultibyteCharacterNotAllowed);
     EXPECT_TRUE(issue.isError());
     EXPECT_NE(issue.message.find("position 4"), std::string::npos)
         << "The error message should pinpoint the correct position.";
@@ -35,36 +35,36 @@ TEST_F(ValidatorTest, DetectsMultiByteCharacter) {
 
 TEST_F(ValidatorTest, ConvertsConsecutiveAsterisksToWarning) {
     ParseResult pr;
-    pr.events.push_back({IssueCode::CONSECUTIVE_ASTERISKS_MERGED, 3, std::nullopt});
+    pr.events.push_back({IssueCode::ConsecutiveAsterisksMerged, 3, std::nullopt});
     auto issues = Validator::validateParseResult(pr);
 
     ASSERT_EQ(issues.size(), 1);
     const auto& issue = issues[0];
-    EXPECT_EQ(issue.code, IssueCode::CONSECUTIVE_ASTERISKS_MERGED);
-    EXPECT_EQ(issue.type, IssueType::WARNING);
+    EXPECT_EQ(issue.code, IssueCode::ConsecutiveAsterisksMerged);
+    EXPECT_EQ(issue.type, IssueType::Warning);
     EXPECT_NE(issue.message.find("Warning at position 3"), std::string::npos);
 }
 
 TEST_F(ValidatorTest, ConvertsTrailingBackslashToError) {
     ParseResult pr;
-    pr.events.push_back({IssueCode::TRAILING_BACKSLASH, 5, std::nullopt});
+    pr.events.push_back({IssueCode::TrailingBackslash, 5, std::nullopt});
     auto issues = Validator::validateParseResult(pr);
 
     ASSERT_EQ(issues.size(), 1);
     const auto& issue = issues[0];
-    EXPECT_EQ(issue.code, IssueCode::TRAILING_BACKSLASH);
+    EXPECT_EQ(issue.code, IssueCode::TrailingBackslash);
     EXPECT_TRUE(issue.isError());
     EXPECT_NE(issue.message.find("Error at position 5"), std::string::npos);
 }
 
 TEST_F(ValidatorTest, ConvertsUndefinedEscapeToError) {
     ParseResult pr;
-    pr.events.push_back({IssueCode::UNDEFINED_ESCAPE_SEQUENCE, 2, "x"});
+    pr.events.push_back({IssueCode::UndefinedEscapeSequence, 2, "x"});
     auto issues = Validator::validateParseResult(pr);
 
     ASSERT_EQ(issues.size(), 1);
     const auto& issue = issues[0];
-    EXPECT_EQ(issue.code, IssueCode::UNDEFINED_ESCAPE_SEQUENCE);
+    EXPECT_EQ(issue.code, IssueCode::UndefinedEscapeSequence);
     EXPECT_TRUE(issue.isError());
     EXPECT_NE(issue.message.find("Error at position 2: Undefined escape sequence '\\x'"),
               std::string::npos);
@@ -73,8 +73,8 @@ TEST_F(ValidatorTest, ConvertsUndefinedEscapeToError) {
 TEST_F(ValidatorTest, HandlesMultipleEventsCorrectly) {
     // This pattern has consecutive asterisks (warning) and a trailing backslash (error).
     ParseResult pr;
-    pr.events.push_back({IssueCode::CONSECUTIVE_ASTERISKS_MERGED, 3, std::nullopt});
-    pr.events.push_back({IssueCode::TRAILING_BACKSLASH, 6, std::nullopt});
+    pr.events.push_back({IssueCode::ConsecutiveAsterisksMerged, 3, std::nullopt});
+    pr.events.push_back({IssueCode::TrailingBackslash, 6, std::nullopt});
 
     auto issues = Validator::validateParseResult(pr);
     ASSERT_EQ(issues.size(), 2);
@@ -82,10 +82,10 @@ TEST_F(ValidatorTest, HandlesMultipleEventsCorrectly) {
     // Order of events is not guaranteed to be preserved, so check for the presence of both.
     // This makes the test more robust.
     bool found_warning = std::any_of(issues.begin(), issues.end(), [](const Issue& i) {
-        return i.code == IssueCode::CONSECUTIVE_ASTERISKS_MERGED && i.type == IssueType::WARNING;
+        return i.code == IssueCode::ConsecutiveAsterisksMerged && i.type == IssueType::Warning;
     });
     bool found_error = std::any_of(issues.begin(), issues.end(), [](const Issue& i) {
-        return i.code == IssueCode::TRAILING_BACKSLASH && i.type == IssueType::ERROR;
+        return i.code == IssueCode::TrailingBackslash && i.type == IssueType::Error;
     });
 
     EXPECT_TRUE(found_warning) << "The consecutive asterisks warning was not generated.";

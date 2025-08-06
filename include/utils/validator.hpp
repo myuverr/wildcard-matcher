@@ -25,7 +25,7 @@ class Validator {
         for (size_t i = 0; i < str.length(); ++i) {
             // A value > 127 indicates the start of a multi-byte sequence in UTF-8.
             if (static_cast<unsigned char>(str[i]) > 127) {
-                issues.push_back(createIssue(IssueCode::MULTIBYTE_CHARACTER_NOT_ALLOWED, i + 1));
+                issues.push_back(createIssue(IssueCode::MultibyteCharacterNotAllowed, i + 1));
                 break;  // Stop after the first error.
             }
         }
@@ -56,24 +56,24 @@ class Validator {
         const auto [type, message_core] = [&] {
             using IssueInfo = std::pair<IssueType, std::string>;
             switch (code) {
-                case IssueCode::MULTIBYTE_CHARACTER_NOT_ALLOWED:
-                    return IssueInfo{IssueType::ERROR,
+                case IssueCode::MultibyteCharacterNotAllowed:
+                    return IssueInfo{IssueType::Error,
                                      "Input must contain only single-byte ASCII characters; a "
                                      "multi-byte character was found."};
 
-                case IssueCode::UNDEFINED_ESCAPE_SEQUENCE:
+                case IssueCode::UndefinedEscapeSequence:
                     return IssueInfo{
-                        IssueType::ERROR,
+                        IssueType::Error,
                         std::format("Undefined escape sequence '\\{}'. This is a fatal error.",
                                     detail.value_or(""))};
 
-                case IssueCode::TRAILING_BACKSLASH:
+                case IssueCode::TrailingBackslash:
                     return IssueInfo{
-                        IssueType::ERROR,
+                        IssueType::Error,
                         "Pattern cannot end with a trailing backslash. This is a fatal error."};
 
-                case IssueCode::CONSECUTIVE_ASTERISKS_MERGED:
-                    return IssueInfo{IssueType::WARNING,
+                case IssueCode::ConsecutiveAsterisksMerged:
+                    return IssueInfo{IssueType::Warning,
                                      "Consecutive '*' characters were found and automatically "
                                      "merged into a single '*'."};
             }

@@ -8,7 +8,7 @@
 /**
  * @brief Categorizes an issue as either a non-fatal warning or a fatal error.
  */
-enum class IssueType { WARNING, ERROR };
+enum class IssueType { Warning, Error };
 
 /**
  * @brief Provides a string representation for an IssueType.
@@ -17,9 +17,9 @@ enum class IssueType { WARNING, ERROR };
  */
 inline std::string_view issueTypeToString(IssueType type) {
     switch (type) {
-        case IssueType::ERROR:
+        case IssueType::Error:
             return "Error";
-        case IssueType::WARNING:
+        case IssueType::Warning:
             return "Warning";
     }
     // This path is unreachable if all enum values are handled in the switch.
@@ -31,12 +31,12 @@ inline std::string_view issueTypeToString(IssueType type) {
  */
 enum class IssueCode {
     // --- Validation Issues ---
-    MULTIBYTE_CHARACTER_NOT_ALLOWED,
+    MultibyteCharacterNotAllowed,
 
     // --- Parsing Issues ---
-    UNDEFINED_ESCAPE_SEQUENCE,
-    TRAILING_BACKSLASH,
-    CONSECUTIVE_ASTERISKS_MERGED
+    UndefinedEscapeSequence,
+    TrailingBackslash,
+    ConsecutiveAsterisksMerged
 };
 
 /**
@@ -48,5 +48,5 @@ struct Issue {
     std::string message;
 
     // Helper to check if the issue is a fatal error.
-    bool isError() const { return type == IssueType::ERROR; }
+    bool isError() const { return type == IssueType::Error; }
 };
