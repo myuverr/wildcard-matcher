@@ -100,30 +100,33 @@ class RecursiveSolver {
             return i == m;
         }
 
-        // Visitor for the token variant
-        return std::visit(
-            [&](const auto& token) {
-                using T = std::decay_t<decltype(token)>;
-                if constexpr (std::is_same_v<T, AnySequence>) {
-                    // Branch 1: The '*' matches an empty sequence. Skip the '*' token
-                    // Branch 2: The '*' matches one or more characters. Consume one character from
-                    // the string and stay at the same '*' token
-                    return isMatch(i, j + 1, depth + 1) || (i < m && isMatch(i + 1, j, depth + 1));
-                } else if constexpr (std::is_same_v<T, AnyChar>) {
-                    // If the string is not exhausted, this token matches the current character
-                    return i < m && isMatch(i + 1, j + 1, depth + 1);
-                } else if constexpr (std::is_same_v<T, LiteralSequence>) {
-                    const std::string& literal = token.value;
-                    const size_t literal_len = literal.length();
-                    // Check if the string has enough characters remaining to match the literal and
-                    // if the substring matches
-                    if (i + literal_len <= m && s.compare(i, literal_len, literal) == 0) {
-                        // If it matches, continue matching from the end of the literal sequence
-                        return isMatch(i + literal_len, j + 1, depth + 1);
-                    }
-                    return false;  // Mismatch if the check fails
+        const auto& current_token = p_tokens[j];
+        // Switch on the index of the active variant member for performance
+        switch (static_cast<TokenTypeIndex>(current_token.index())) {
+            case TokenTypeIndex::AnySequence: {
+                // Branch 1: The '*' matches an empty sequence. Skip it
+                // Branch 2: The '*' matches one character. Consume a character from s and stay on
+                // the same '*' token
+                return isMatch(i, j + 1, depth + 1) || (i < m && isMatch(i + 1, j, depth + 1));
+            }
+            case TokenTypeIndex::AnyChar: {
+                // If the string is not exhausted, this token matches the current character
+                return i < m && isMatch(i + 1, j + 1, depth + 1);
+            }
+            case TokenTypeIndex::LiteralSequence: {
+                // This token represents a sequence of one or more literal characters
+                const auto& literal_seq = std::get<LiteralSequence>(current_token);
+                const std::string& literal = literal_seq.value;
+                const size_t literal_len = literal.length();
+
+                // Check if the remaining part of the string matches the literal
+                if (i + literal_len <= m && s.compare(i, literal_len, literal) == 0) {
+                    // If it matches, continue matching from the end of the literal
+                    return isMatch(i + literal_len, j + 1, depth + 1);
                 }
-            },
-            p_tokens[j]);
+                return false;  // Mismatch if the check fails
+            }
+        }
+        APP_UNREACHABLE();  // Should not be reached
     }
 };

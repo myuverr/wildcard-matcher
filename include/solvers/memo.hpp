@@ -121,20 +121,24 @@ class MemoSolver {
         if (j == n) {
             ans = (i == m);
         } else {
-            ans = std::visit(
-                [&](const auto& token) {
-                    using T = std::decay_t<decltype(token)>;
-                    if constexpr (std::is_same_v<T, AnySequence>) {
-                        // Branch 1: The '*' matches an empty sequence. Skip the '*' token.
+            // Immediately-invoked lambda to calculate the result
+            ans = [&] {
+                const auto& current_token = p_tokens[j];
+                switch (static_cast<TokenTypeIndex>(current_token.index())) {
+                    case TokenTypeIndex::AnySequence: {
+                        // Branch 1: The '*' matches an empty sequence. Skip the '*' token
                         // Branch 2: The '*' matches one character. Consume a character from the
                         // string and stay at the same '*' token
                         return isMatch(i, j + 1, depth + 1) ||
                                (i < m && isMatch(i + 1, j, depth + 1));
-                    } else if constexpr (std::is_same_v<T, AnyChar>) {
+                    }
+                    case TokenTypeIndex::AnyChar: {
                         // If the string is not exhausted, this token matches the current character
                         return i < m && isMatch(i + 1, j + 1, depth + 1);
-                    } else if constexpr (std::is_same_v<T, LiteralSequence>) {
-                        const std::string& literal = token.value;
+                    }
+                    case TokenTypeIndex::LiteralSequence: {
+                        const auto& literal_seq = std::get<LiteralSequence>(current_token);
+                        const std::string& literal = literal_seq.value;
                         const size_t literal_len = literal.length();
 
                         // Check if the string has enough characters remaining to match the literal
@@ -147,9 +151,9 @@ class MemoSolver {
                             return false;
                         }
                     }
-                    APP_UNREACHABLE();  // Should not be reached
-                },
-                p_tokens[j]);
+                }
+                APP_UNREACHABLE();  // Should not be reached
+            }();  // <-- Immediately invoke the lambda
         }
 
         // Store the result in the memoization table before returning
