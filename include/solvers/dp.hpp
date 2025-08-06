@@ -99,19 +99,23 @@ class DpSolver {
         // Fill the DP table
         for (size_t i = 1; i <= m; ++i) {
             for (size_t j = 1; j <= n; ++j) {
-                std::visit(
-                    [&](const auto& token) {
-                        using T = std::decay_t<decltype(token)>;
-                        if constexpr (std::is_same_v<T, AnySequence>) {
+                // Use an immediately-invoked lambda to calculate and assign dp[i][j]
+                dp[i][j] = [&]() -> bool {
+                    const auto& current_token = p_tokens[j - 1];
+                    switch (static_cast<TokenTypeIndex>(current_token.index())) {
+                        case TokenTypeIndex::AnySequence: {
                             // The '*' token can either match an empty sequence (dp[i][j-1]) or
                             // match the current character s[i-1] (dp[i-1][j])
-                            dp[i][j] = dp[i][j - 1] || dp[i - 1][j];
-                        } else if constexpr (std::is_same_v<T, AnyChar>) {
+                            return dp[i][j - 1] || dp[i - 1][j];
+                        }
+                        case TokenTypeIndex::AnyChar: {
                             // The '?' token matches any single character, so the result depends on
                             // the subproblem without the current character and token
-                            dp[i][j] = dp[i - 1][j - 1];
-                        } else if constexpr (std::is_same_v<T, LiteralSequence>) {
-                            const std::string& literal = token.value;
+                            return dp[i - 1][j - 1];
+                        }
+                        case TokenTypeIndex::LiteralSequence: {
+                            const auto& literal_seq = std::get<LiteralSequence>(current_token);
+                            const std::string& literal = literal_seq.value;
                             const size_t literal_len = literal.length();
                             // Check if the string has enough preceding characters and if the
                             // substring ending at s[i-1] matches the literal
@@ -119,12 +123,14 @@ class DpSolver {
                                 s.compare(i - literal_len, literal_len, literal) == 0) {
                                 // If they match, the result depends on the state before this
                                 // literal match
-                                dp[i][j] = dp[i - literal_len][j - 1];
+                                return dp[i - literal_len][j - 1];
                             }
                             // else, dp[i][j] remains false
+                            return false;
                         }
-                    },
-                    p_tokens[j - 1]);
+                    }
+                    APP_UNREACHABLE();  // Should not be reached
+                }();  // <-- Immediately invoke the lambda
             }
         }
 

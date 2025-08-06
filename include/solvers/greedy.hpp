@@ -96,55 +96,54 @@ class GreedySolver {
         std::optional<BacktrackPoint> backtrack_point;
 
         while (s_idx < m) {
-            // Case 1: A direct match is found (AnyChar or a matching LiteralSequence)
+            // Case 1: If there's a pattern token, try to match it
             if (p_idx < n) {
-                bool matched = std::visit(
-                    [&](const auto& token) {
-                        using T = std::decay_t<decltype(token)>;
-                        if constexpr (std::is_same_v<T, AnyChar>) {
-                            s_idx++;
-                            p_idx++;
-                            return true;
-                        } else if constexpr (std::is_same_v<T, LiteralSequence>) {
-                            const std::string& literal = token.value;
-                            const size_t literal_len = literal.length();
-                            if (m - s_idx >= literal_len &&
-                                s.compare(s_idx, literal_len, literal) == 0) {
-                                s_idx += literal_len;
-                                p_idx++;
-                                return true;
-                            }
-                        }
-                        return false;  // No match for this type or condition failed
-                    },
-                    p_tokens[p_idx]);
+                const auto& current_token = p_tokens[p_idx];
+                switch (static_cast<TokenTypeIndex>(current_token.index())) {
+                    case TokenTypeIndex::AnyChar: {
+                        s_idx++;
+                        p_idx++;
+                        continue;
+                    }
+                    case TokenTypeIndex::LiteralSequence: {
+                        const auto& literal_seq = std::get<LiteralSequence>(current_token);
+                        const std::string& literal = literal_seq.value;
+                        const size_t literal_len = literal.length();
 
-                if (matched) {
-                    continue;
+                        if (m - s_idx >= literal_len &&
+                            s.compare(s_idx, literal_len, literal) == 0) {
+                            s_idx += literal_len;
+                            p_idx++;
+                            continue;
+                        }
+                        // Literal does not match, break switch to fall through to backtracking
+                        break;
+                    }
+                    case TokenTypeIndex::AnySequence: {
+                        // Found a '*', this is a potential backtrack point
+                        // Record its position and advance pattern pointer
+                        backtrack_point = {p_idx, s_idx};
+                        p_idx++;
+                        continue;
+                    }
                 }
             }
 
-            // Case 2: If a direct match fails, check for an AnySequence ('*') token
-            // Record its position and the current string index as an atomic backtrack point
-            if (p_idx < n && std::holds_alternative<AnySequence>(p_tokens[p_idx])) {
-                backtrack_point = {p_idx, s_idx};
-                p_idx++;
-            }
-            // Case 3: A mismatch occurred, but have a recorded backtrack point
-            else if (backtrack_point.has_value()) {
-                // Restore state from the backtrack point
+            // Case 2: A mismatch occurred, try to backtrack using the last '*' found
+            if (backtrack_point.has_value()) {
+                // Restore pattern pointer to the one after the '*'
                 p_idx = backtrack_point->star_p_idx + 1;
                 // Advance the string match position for '*' and backtrack the main string pointer
                 backtrack_point->s_match_idx++;
                 s_idx = backtrack_point->s_match_idx;
             }
-            // Case 4: A definitive mismatch with no option to backtrack
+            // Case 3: A definitive mismatch with no '*' to backtrack to
             else {
                 return false;
             }
         }
 
-        // The string is exhausted. Consume any trailing ANY_SEQUENCE tokens in the pattern
+        // The string is exhausted. Consume any trailing '*' tokens in the pattern
         while (p_idx < n && std::holds_alternative<AnySequence>(p_tokens[p_idx])) {
             p_idx++;
         }
