@@ -2,7 +2,7 @@
 
 #include <algorithm>
 #include <chrono>
-#include <optional>
+#include <cstdint>
 #include <string_view>
 #include <variant>
 #include <vector>
@@ -42,12 +42,21 @@ class MemoSolver {
     }
 
    private:
+    /**
+     * @brief Represents the state of a memoization table entry.
+     */
+    enum class MatchState : std::uint8_t {
+        Uncomputed,
+        Match,
+        NoMatch,
+    };
+
     // --- Member variables holding the context for a single run ---
     const std::string_view s;
     const std::vector<Token>& p_tokens;
     const size_t m;
     const size_t n;
-    mutable std::vector<std::vector<std::optional<bool>>> memo;
+    mutable std::vector<std::vector<MatchState>> memo;
     mutable size_t max_depth;
 
     /**
@@ -61,7 +70,7 @@ class MemoSolver {
           m(s_in.length()),
           n(p_tokens_in.size()),
           memo(s_in.length() + 1,
-               std::vector<std::optional<bool>>(p_tokens_in.size() + 1, std::nullopt)),
+               std::vector<MatchState>(p_tokens_in.size() + 1, MatchState::Uncomputed)),
           max_depth(0) {}
 
     /**
@@ -110,53 +119,51 @@ class MemoSolver {
         max_depth = std::max(max_depth, depth);
 
         // If the subproblem is already solved, return the cached result
-        if (memo[i][j].has_value()) {
-            return *memo[i][j];
+        if (memo[i][j] != MatchState::Uncomputed) {
+            return memo[i][j] == MatchState::Match;
         }
 
-        bool ans = false;
+        // Use an immediately-invoked lambda to calculate the result for this state
+        const bool ans = [&] {
+            // Base case: If the pattern is exhausted, the match is successful only if the string is
+            // also exhausted
+            if (j == n) {
+                return (i == m);
+            }
 
-        // Base case: If the pattern is exhausted, the match is successful only
-        // if the string is also exhausted
-        if (j == n) {
-            ans = (i == m);
-        } else {
-            // Immediately-invoked lambda to calculate the result
-            ans = [&] {
-                const auto& current_token = p_tokens[j];
-                switch (static_cast<TokenTypeIndex>(current_token.index())) {
-                    case TokenTypeIndex::AnySequence: {
-                        // Branch 1: The '*' matches an empty sequence. Skip the '*' token
-                        // Branch 2: The '*' matches one character. Consume a character from the
-                        // string and stay at the same '*' token
-                        return isMatch(i, j + 1, depth + 1) ||
-                               (i < m && isMatch(i + 1, j, depth + 1));
-                    }
-                    case TokenTypeIndex::AnyChar: {
-                        // If the string is not exhausted, this token matches the current character
-                        return i < m && isMatch(i + 1, j + 1, depth + 1);
-                    }
-                    case TokenTypeIndex::LiteralSequence: {
-                        const auto& literal_seq = std::get<LiteralSequence>(current_token);
-                        const std::string& literal = literal_seq.value;
-                        const size_t literal_len = literal.length();
+            const auto& current_token = p_tokens[j];
+            switch (static_cast<TokenTypeIndex>(current_token.index())) {
+                case TokenTypeIndex::AnySequence: {
+                    // Branch 1: The '*' matches an empty sequence. Skip the '*' token
+                    // Branch 2: The '*' matches one character. Consume a character from the string
+                    // and stay at the same '*' token
+                    return isMatch(i, j + 1, depth + 1) || (i < m && isMatch(i + 1, j, depth + 1));
+                }
+                case TokenTypeIndex::AnyChar: {
+                    // If the string is not exhausted, this token matches the current character
+                    return i < m && isMatch(i + 1, j + 1, depth + 1);
+                }
+                case TokenTypeIndex::LiteralSequence: {
+                    const auto& literal_seq = std::get<LiteralSequence>(current_token);
+                    const std::string& literal = literal_seq.value;
+                    const size_t literal_len = literal.length();
 
-                        // Check if the string has enough characters remaining to match the literal
-                        // and if the substring matches
-                        if (i + literal_len <= m && s.compare(i, literal_len, literal) == 0) {
-                            // If it matches, continue matching from the end of the literal sequence
-                            return isMatch(i + literal_len, j + 1, depth + 1);
-                        } else {
-                            // The literal does not match
-                            return false;
-                        }
+                    // Check if the string has enough characters remaining to match the literal and
+                    // if the substring matches
+                    if (i + literal_len <= m && s.compare(i, literal_len, literal) == 0) {
+                        // If it matches, continue matching from the end of the literal sequence
+                        return isMatch(i + literal_len, j + 1, depth + 1);
+                    } else {
+                        // The literal does not match
+                        return false;
                     }
                 }
-                APP_UNREACHABLE();  // Should not be reached
-            }();  // <-- Immediately invoke the lambda
-        }
+            }
+            APP_UNREACHABLE();  // Should not be reached
+        }();  // <-- Immediately invoke the lambda
 
         // Store the result in the memoization table before returning
-        return *(memo[i][j] = ans);
+        memo[i][j] = ans ? MatchState::Match : MatchState::NoMatch;
+        return ans;
     }
 };

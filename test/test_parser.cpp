@@ -8,6 +8,7 @@
 #include "utils/parser.hpp"
 
 namespace {
+
 /**
  * @class ParserTest
  * @brief A parameterized test fixture for the Parser class.

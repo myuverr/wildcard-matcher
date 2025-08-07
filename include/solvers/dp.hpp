@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <cstdint>
 #include <string_view>
 #include <variant>
 #include <vector>
@@ -39,6 +40,14 @@ class DpSolver {
     }
 
    private:
+    /**
+     * @brief Represents the state of a DP table entry.
+     */
+    enum class DpState : std::uint8_t {
+        NoMatch = 0,
+        Match = 1,
+    };
+
     // --- Member variables holding the context for a single run ---
     const std::string_view s;
     const std::vector<Token>& p_tokens;
@@ -68,7 +77,7 @@ class DpSolver {
             std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
 
         // 3. Calculate extra space overhead from the (m+1)x(n+1) DP table
-        std::size_t space_used = (m + 1) * (n + 1) * sizeof(bool);
+        std::size_t space_used = (m + 1) * (n + 1) * sizeof(DpState);
 
         // 4. Return the struct containing the result and profiling data
         return {result, duration.count(), space_used};
@@ -84,10 +93,10 @@ class DpSolver {
      */
     bool isMatch() {
         // dp[i][j]: true if the first i chars of s match the first j tokens of p_tokens
-        std::vector<std::vector<bool>> dp(m + 1, std::vector<bool>(n + 1, false));
+        std::vector<std::vector<DpState>> dp(m + 1, std::vector<DpState>(n + 1, DpState::NoMatch));
 
         // An empty pattern matches an empty string
-        dp[0][0] = true;
+        dp[0][0] = DpState::Match;
 
         // When s is empty, p_tokens can only match if it consists of only '*' tokens
         for (size_t j = 1; j <= n; ++j) {
@@ -100,13 +109,17 @@ class DpSolver {
         for (size_t i = 1; i <= m; ++i) {
             for (size_t j = 1; j <= n; ++j) {
                 // Use an immediately-invoked lambda to calculate and assign dp[i][j]
-                dp[i][j] = [&]() -> bool {
+                dp[i][j] = [&] {
                     const auto& current_token = p_tokens[j - 1];
                     switch (static_cast<TokenTypeIndex>(current_token.index())) {
                         case TokenTypeIndex::AnySequence: {
-                            // The '*' token can either match an empty sequence (dp[i][j-1]) or
-                            // match the current character s[i-1] (dp[i-1][j])
-                            return dp[i][j - 1] || dp[i - 1][j];
+                            // The '*' token can match an empty sequence (dp[i][j-1]) or match the
+                            // current char s[i-1] (dp[i-1][j])
+                            if (dp[i][j - 1] == DpState::Match || dp[i - 1][j] == DpState::Match) {
+                                return DpState::Match;
+                            } else {
+                                return DpState::NoMatch;
+                            }
                         }
                         case TokenTypeIndex::AnyChar: {
                             // The '?' token matches any single character, so the result depends on
@@ -125,8 +138,8 @@ class DpSolver {
                                 // literal match
                                 return dp[i - literal_len][j - 1];
                             }
-                            // else, dp[i][j] remains false
-                            return false;
+                            // The literal does not match
+                            return DpState::NoMatch;
                         }
                     }
                     APP_UNREACHABLE();  // Should not be reached
@@ -134,6 +147,6 @@ class DpSolver {
             }
         }
 
-        return dp[m][n];
+        return dp[m][n] == DpState::Match;
     }
 };

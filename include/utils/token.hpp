@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <variant>
 
@@ -51,7 +52,7 @@ struct AnySequence {
 /**
  * @brief Enum representing the index of each token type in the Token variant.
  */
-enum class TokenTypeIndex { TOKEN_LIST(EXPAND_TYPE_FIRST, EXPAND_TYPE_REST) };
+enum class TokenTypeIndex : std::uint8_t { TOKEN_LIST(EXPAND_TYPE_FIRST, EXPAND_TYPE_REST) };
 
 /**
  * @brief A type-safe variant representing any possible token in the pattern.

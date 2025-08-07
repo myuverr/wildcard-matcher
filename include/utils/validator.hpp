@@ -82,8 +82,7 @@ class Validator {
         }();  // <-- Immediately invoke the lambda
 
         // Centralized message formatting
-        std::string message =
-            std::format("{} at position {}: {}", issueTypeToString(type), position, message_core);
+        std::string message = std::format("{} at position {}: {}", type, position, message_core);
 
         return {type, code, message};
     }

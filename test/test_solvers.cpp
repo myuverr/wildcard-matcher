@@ -7,6 +7,8 @@
 #include "test_solver_cases.hpp"
 #include "wildcard_matcher.hpp"
 
+namespace {
+
 /**
  * @class WildcardSolverTest
  * @brief A type-parameterized test fixture for wildcard matchers.
@@ -58,3 +60,5 @@ using SolverImplementations = ::testing::Types<RecursiveSolver, MemoSolver, DpSo
 // Instantiate the test suite for each type in the SolverImplementations list.
 // The first argument is a user-defined prefix for the test suite name in the final output.
 INSTANTIATE_TYPED_TEST_SUITE_P(AllSolvers, WildcardSolverTest, SolverImplementations);
+
+}  // namespace

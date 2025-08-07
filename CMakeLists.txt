@@ -47,6 +47,7 @@ target_link_libraries(wildcard_matcher PRIVATE cxxopts::cxxopts)
 # --- Setup Testing ---
 # Enable testing for this project
 enable_testing()
+include(GoogleTest)
 
 # --- Parser Tests ---
 add_executable(run_parser_tests
@@ -57,8 +58,10 @@ target_include_directories(run_parser_tests PUBLIC
   "${PROJECT_SOURCE_DIR}/test/include"
 )
 target_link_libraries(run_parser_tests PRIVATE GTest::gtest_main)
-add_test(NAME parser_tests COMMAND run_parser_tests)
-set_tests_properties(parser_tests PROPERTIES LABELS "parser")
+gtest_discover_tests(run_parser_tests
+  PROPERTIES
+    LABELS "parser"
+)
 
 # --- Validator Tests ---
 add_executable(run_validator_tests
@@ -69,8 +72,10 @@ target_include_directories(run_validator_tests PUBLIC
   "${PROJECT_SOURCE_DIR}/test/include"
 )
 target_link_libraries(run_validator_tests PRIVATE GTest::gtest_main)
-add_test(NAME validator_tests COMMAND run_validator_tests)
-set_tests_properties(validator_tests PROPERTIES LABELS "validator")
+gtest_discover_tests(run_validator_tests
+  PROPERTIES
+    LABELS "validator"
+)
 
 # --- Solvers Tests ---
 add_executable(run_solvers_tests
@@ -81,11 +86,7 @@ target_include_directories(run_solvers_tests PUBLIC
   "${PROJECT_SOURCE_DIR}/test/include"
 )
 target_link_libraries(run_solvers_tests PRIVATE GTest::gtest_main)
-add_test(NAME solver_tests COMMAND run_solvers_tests)
-set_tests_properties(solver_tests PROPERTIES LABELS "solvers")
-
-# Discover all tests for each executable
-include(GoogleTest)
-gtest_discover_tests(run_parser_tests)
-gtest_discover_tests(run_validator_tests)
-gtest_discover_tests(run_solvers_tests)
+gtest_discover_tests(run_solvers_tests
+  PROPERTIES
+    LABELS "solvers"
+)

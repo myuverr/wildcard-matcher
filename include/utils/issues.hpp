@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+#include <format>
 #include <string>
 #include <string_view>
 
@@ -8,28 +10,41 @@
 /**
  * @brief Categorizes an issue as either a non-fatal warning or a fatal error.
  */
-enum class IssueType { Warning, Error };
+enum class IssueType : std::uint8_t { Warning, Error };
 
 /**
- * @brief Provides a string representation for an IssueType.
- * @param type The issue type.
- * @return A string_view literal for the specified type.
+ * @brief Specialization of std::formatter for the IssueType enum.
  */
-inline std::string_view issueTypeToString(IssueType type) {
-    switch (type) {
-        case IssueType::Error:
-            return "Error";
-        case IssueType::Warning:
-            return "Warning";
+template <>
+struct std::formatter<IssueType> : std::formatter<std::string_view> {
+    /**
+     * @brief Formats the IssueType enum as a string.
+     * @param type The IssueType value to format.
+     * @param ctx The formatting context.
+     * @return An iterator to the end of the formatted output.
+     */
+    auto format(IssueType type, auto& ctx) const {
+        const string_view name = [&] {
+            switch (type) {
+                case IssueType::Error: {
+                    return "Error";
+                }
+                case IssueType::Warning: {
+                    return "Warning";
+                }
+            }
+            APP_UNREACHABLE();
+        }();
+
+        // Delegate the actual formatting to the base class formatter for std::string_view
+        return std::formatter<std::string_view>::format(name, ctx);
     }
-    // This path is unreachable if all enum values are handled in the switch.
-    APP_UNREACHABLE();
-}
+};
 
 /**
  * @brief Provides machine-readable codes for all possible validation and parsing issues.
  */
-enum class IssueCode {
+enum class IssueCode : std::uint8_t {
     // --- Validation Issues ---
     MultibyteCharacterNotAllowed,
 
