@@ -52,7 +52,7 @@ class Parser {
          * If the builder contains characters, it creates a LiteralSequence token,
          * adds it to the token list, and clears the builder.
          */
-        auto flush_literal_builder = [&]() {
+        auto flush_literal_builder = [&] {
             if (!literal_builder.empty()) {
                 result.tokens.push_back(LiteralSequence{std::move(literal_builder)});
                 literal_builder.clear();  // Reset for the next sequence
@@ -63,12 +63,13 @@ class Parser {
             char current_char = p[i];
 
             switch (current_char) {
-                case '?':
+                case '?': {
                     flush_literal_builder();
                     result.tokens.push_back(AnyChar{});
                     break;
+                }
 
-                case '*':
+                case '*': {
                     flush_literal_builder();
                     // Merge consecutive '*' by only adding if the previous token wasn't also '*'
                     if (!result.tokens.empty() &&
@@ -78,8 +79,9 @@ class Parser {
                         result.tokens.push_back(AnySequence{});
                     }
                     break;
+                }
 
-                case '\\':
+                case '\\': {
                     if (i + 1 < p.length()) {
                         char next_char = p[i + 1];
                         // Check for undefined escape sequences. A "defined" escape is one that
@@ -96,11 +98,13 @@ class Parser {
                         result.events.push_back({IssueCode::TrailingBackslash, i + 1});
                     }
                     break;
+                }
 
-                default:
+                default: {
                     // This is a standard literal character
                     literal_builder += current_char;
                     break;
+                }
             }
         }
 

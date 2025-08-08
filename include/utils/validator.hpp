@@ -76,6 +76,23 @@ class Validator {
                     return IssueInfo{IssueType::Warning,
                                      "Consecutive '*' characters were found and automatically "
                                      "merged into a single '*'."};
+
+                case IssueCode::UnterminatedCharacterSet:
+                    return IssueInfo{
+                        IssueType::Error,
+                        "The pattern ends with an unclosed character set. This is a fatal error."};
+
+                case IssueCode::EmptyCharacterSet:
+                    return IssueInfo{
+                        IssueType::Error,
+                        "An empty character set '[]' is not allowed. This is a fatal error."};
+
+                case IssueCode::RedundantEscapeSequence:
+                    return IssueInfo{
+                        IssueType::Warning,
+                        std::format("Redundant escape sequence '\\{}'; the backslash will be "
+                                    "ignored and '{}' will be treated as a literal character.",
+                                    detail.value_or(""), detail.value_or(""))};
             }
             // If the switch is exhaustive (as it should be), this code is unreachable.
             APP_UNREACHABLE();

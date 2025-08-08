@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bitset>
 #include <cstdint>
 #include <string>
 #include <variant>
@@ -11,7 +12,8 @@
 #define TOKEN_LIST(APPLY_FIRST, APPLY_REST) \
     APPLY_FIRST(AnySequence)                \
     APPLY_REST(LiteralSequence)             \
-    APPLY_REST(AnyChar)
+    APPLY_REST(AnyChar)                     \
+    APPLY_REST(CharacterSet)
 
 // --- Token Data Structures ---
 
@@ -41,6 +43,19 @@ struct AnyChar {
  */
 struct AnySequence {
     bool operator==(const AnySequence& other) const = default;
+};
+
+/**
+ * @brief Represents a character set token, e.g., `[abc]`, `[a-z]`, or `[^0-9]`.
+ *
+ * This token matches any single character that is (or is not, if negated)
+ * in the defined set.
+ */
+struct CharacterSet {
+    // A bitset where each bit corresponds to an ASCII character code
+    // The value 'true' indicates the character is in the set
+    std::bitset<256> characters;
+    bool operator==(const CharacterSet& other) const = default;
 };
 
 // --- Generated Token Constructs ---

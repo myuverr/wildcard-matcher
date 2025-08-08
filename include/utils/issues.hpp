@@ -45,13 +45,20 @@ struct std::formatter<IssueType> : std::formatter<std::string_view> {
  * @brief Provides machine-readable codes for all possible validation and parsing issues.
  */
 enum class IssueCode : std::uint8_t {
-    // --- Validation Issues ---
+    // --- Pre-Parsing Validation Issues ---
     MultibyteCharacterNotAllowed,
 
-    // --- Parsing Issues ---
-    UndefinedEscapeSequence,
+    // --- General Parsing Issues ---
     TrailingBackslash,
-    ConsecutiveAsterisksMerged
+    UndefinedEscapeSequence,
+    RedundantEscapeSequence,
+
+    // --- Asterisk Wildcard Issues ---
+    ConsecutiveAsterisksMerged,
+
+    // --- Character Set Issues ---
+    EmptyCharacterSet,
+    UnterminatedCharacterSet,
 };
 
 /**
