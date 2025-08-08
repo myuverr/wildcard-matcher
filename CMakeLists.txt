@@ -33,16 +33,35 @@ FetchContent_MakeAvailable(cxxopts googletest)
 # --- End of dependencies ---
 
 
-# Define the main executable target
+# --- Create Granular Libraries ---
+
+# Utils Library (parser, validator)
+add_library(utils_lib
+  src/utils/parser.cpp
+  src/utils/validator.cpp
+)
+target_include_directories(utils_lib PUBLIC "${PROJECT_SOURCE_DIR}/include/")
+
+
+# Solvers Library (dp, greedy, memo, recursive)
+add_library(solvers_lib
+  src/solvers/dp.cpp
+  src/solvers/greedy.cpp
+  src/solvers/memo.cpp
+  src/solvers/recursive.cpp
+)
+target_include_directories(solvers_lib PUBLIC "${PROJECT_SOURCE_DIR}/include/")
+
+# --- Define the main executable target ---
 add_executable(wildcard_matcher
   src/main.cpp
 )
+target_link_libraries(wildcard_matcher PRIVATE
+  cxxopts::cxxopts
+  solvers_lib
+  utils_lib
+)
 
-# Add the 'include' directory to the target's include path
-target_include_directories(wildcard_matcher PUBLIC "${PROJECT_SOURCE_DIR}/include")
-
-# Link cxxopts to the main target
-target_link_libraries(wildcard_matcher PRIVATE cxxopts::cxxopts)
 
 # --- Setup Testing ---
 # Enable testing for this project
@@ -53,11 +72,11 @@ include(GoogleTest)
 add_executable(run_parser_tests
   test/test_parser.cpp
 )
-target_include_directories(run_parser_tests PUBLIC
-  "${PROJECT_SOURCE_DIR}/include"
-  "${PROJECT_SOURCE_DIR}/test/include"
+target_include_directories(run_parser_tests PUBLIC "${PROJECT_SOURCE_DIR}/test/include")
+target_link_libraries(run_parser_tests PRIVATE
+  utils_lib
+  GTest::gtest_main
 )
-target_link_libraries(run_parser_tests PRIVATE GTest::gtest_main)
 gtest_discover_tests(run_parser_tests
   PROPERTIES
     LABELS "parser"
@@ -67,11 +86,11 @@ gtest_discover_tests(run_parser_tests
 add_executable(run_validator_tests
   test/test_validator.cpp
 )
-target_include_directories(run_validator_tests PUBLIC
-  "${PROJECT_SOURCE_DIR}/include"
-  "${PROJECT_SOURCE_DIR}/test/include"
+target_include_directories(run_validator_tests PUBLIC "${PROJECT_SOURCE_DIR}/test/include")
+target_link_libraries(run_validator_tests PRIVATE
+  utils_lib
+  GTest::gtest_main
 )
-target_link_libraries(run_validator_tests PRIVATE GTest::gtest_main)
 gtest_discover_tests(run_validator_tests
   PROPERTIES
     LABELS "validator"
@@ -81,11 +100,12 @@ gtest_discover_tests(run_validator_tests
 add_executable(run_solvers_tests
   test/test_solvers.cpp
 )
-target_include_directories(run_solvers_tests PUBLIC
-  "${PROJECT_SOURCE_DIR}/include"
-  "${PROJECT_SOURCE_DIR}/test/include"
+target_include_directories(run_solvers_tests PUBLIC "${PROJECT_SOURCE_DIR}/test/include")
+target_link_libraries(run_solvers_tests PRIVATE
+  solvers_lib
+  utils_lib
+  GTest::gtest_main
 )
-target_link_libraries(run_solvers_tests PRIVATE GTest::gtest_main)
 gtest_discover_tests(run_solvers_tests
   PROPERTIES
     LABELS "solvers"

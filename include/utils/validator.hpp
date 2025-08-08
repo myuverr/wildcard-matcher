@@ -1,12 +1,11 @@
 #pragma once
 
-#include <format>
+#include <cstddef>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
 
-#include "utils/compiler.hpp"
 #include "utils/issues.hpp"
 #include "utils/parser.hpp"
 
@@ -20,87 +19,19 @@ class Validator {
      * @param str The string to validate.
      * @return A vector of issues found.
      */
-    static std::vector<Issue> validateRawString(std::string_view str) {
-        std::vector<Issue> issues;
-        for (size_t i = 0; i < str.length(); ++i) {
-            // A value > 127 indicates the start of a multi-byte sequence in UTF-8.
-            if (static_cast<unsigned char>(str[i]) > 127) {
-                issues.push_back(createIssue(IssueCode::MultibyteCharacterNotAllowed, i + 1));
-                break;  // Stop after the first error.
-            }
-        }
-        return issues;
-    }
+    static std::vector<Issue> validateRawString(std::string_view str);
 
     /**
      * @brief Interprets events from a ParseResult to generate formal Issues.
      * @param parse_result The result from Parser::parse.
      * @return A vector of all issues (errors and warnings) found during parsing.
      */
-    static std::vector<Issue> validateParseResult(const ParseResult& parse_result) {
-        std::vector<Issue> issues;
-        for (const auto& event : parse_result.events) {
-            issues.push_back(createIssue(event.code, event.position, event.detail));
-        }
-        return issues;
-    }
+    static std::vector<Issue> validateParseResult(const ParseResult& parse_result);
 
    private:
     /**
      * @brief [private] Factory to create standardized issue messages.
      */
-    static Issue createIssue(IssueCode code, size_t position,
-                             const std::optional<std::string>& detail = std::nullopt) {
-        // Use an immediately-invoked lambda to retrieve the unique details for each case, returning
-        // them as a pair of {IssueType, core message string}.
-        const auto [type, message_core] = [&] {
-            using IssueInfo = std::pair<IssueType, std::string>;
-            switch (code) {
-                case IssueCode::MultibyteCharacterNotAllowed:
-                    return IssueInfo{IssueType::Error,
-                                     "Input must contain only single-byte ASCII characters; a "
-                                     "multi-byte character was found."};
-
-                case IssueCode::UndefinedEscapeSequence:
-                    return IssueInfo{
-                        IssueType::Error,
-                        std::format("Undefined escape sequence '\\{}'. This is a fatal error.",
-                                    detail.value_or(""))};
-
-                case IssueCode::TrailingBackslash:
-                    return IssueInfo{
-                        IssueType::Error,
-                        "Pattern cannot end with a trailing backslash. This is a fatal error."};
-
-                case IssueCode::ConsecutiveAsterisksMerged:
-                    return IssueInfo{IssueType::Warning,
-                                     "Consecutive '*' characters were found and automatically "
-                                     "merged into a single '*'."};
-
-                case IssueCode::UnterminatedCharacterSet:
-                    return IssueInfo{
-                        IssueType::Error,
-                        "The pattern ends with an unclosed character set. This is a fatal error."};
-
-                case IssueCode::EmptyCharacterSet:
-                    return IssueInfo{
-                        IssueType::Error,
-                        "An empty character set '[]' is not allowed. This is a fatal error."};
-
-                case IssueCode::RedundantEscapeSequence:
-                    return IssueInfo{
-                        IssueType::Warning,
-                        std::format("Redundant escape sequence '\\{}'; the backslash will be "
-                                    "ignored and '{}' will be treated as a literal character.",
-                                    detail.value_or(""), detail.value_or(""))};
-            }
-            // If the switch is exhaustive (as it should be), this code is unreachable.
-            APP_UNREACHABLE();
-        }();  // <-- Immediately invoke the lambda
-
-        // Centralized message formatting
-        std::string message = std::format("{} at position {}: {}", type, position, message_core);
-
-        return {type, code, message};
-    }
+    static Issue createIssue(IssueCode code, std::size_t position,
+                             const std::optional<std::string>& detail = std::nullopt);
 };

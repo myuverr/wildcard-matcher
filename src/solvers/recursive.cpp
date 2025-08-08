@@ -1,0 +1,106 @@
+#include "solvers/recursive.hpp"
+
+#include <algorithm>
+#include <chrono>
+#include <cstddef>
+#include <string_view>
+#include <variant>
+#include <vector>
+
+#include "utils/compiler.hpp"
+#include "wildcard_matcher.hpp"
+
+/**
+ * @brief Runs and profiles the recursive algorithm using a pre-parsed token vector.
+ * @param s The text string view to match.
+ * @param p_tokens The tokenized pattern vector.
+ * @return A SolverProfile struct containing the match result, time elapsed, and space used.
+ */
+SolverProfile RecursiveSolver::runAndProfile(std::string_view s,
+                                             const std::vector<Token>& p_tokens) {
+    // Create an instance of the solver with the string and tokenized pattern
+    RecursiveSolver solver(s, p_tokens);
+    return solver.run();
+}
+
+/**
+ * @brief [private] Constructor to initialize the solver's context.
+ * @param s_in The text string view to match.
+ * @param p_tokens_in The vector of tokens representing the pattern.
+ */
+RecursiveSolver::RecursiveSolver(std::string_view s_in, const std::vector<Token>& p_tokens_in)
+    : s(s_in), p_tokens(p_tokens_in), m(s_in.length()), n(p_tokens_in.size()), max_depth(0) {}
+
+/**
+ * @brief [private] Runs the core logic and profiling for the instance.
+ * @return A SolverProfile struct.
+ */
+SolverProfile RecursiveSolver::run() const {
+    // 1. Start the timer and execute the core matching logic
+    auto start_time = std::chrono::high_resolution_clock::now();
+    bool result = isMatch(0, 0, 0);
+
+    // 2. Stop the timer and calculate the duration
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - start_time);
+
+    // 3. Calculate the actual extra space overhead
+    // Space overhead = max recursion depth * approximate size of each stack frame
+    // Each stack frame is estimated to contain: 2 size_t args + 1 return address
+    std::size_t space_per_frame = sizeof(std::size_t) * 2 + sizeof(void*);
+    std::size_t space_used = max_depth * space_per_frame;
+
+    // 4. Return the struct containing the result and profiling data
+    return {result, duration.count(), space_used};
+}
+
+/**
+ * @brief [private] Checks if the string and tokenized pattern match using recursive
+ * backtracking.
+ *
+ * It uses member variables for context and tracks recursion depth for profiling.
+ *
+ * @param i The current index in the input string `s`.
+ * @param j The current index in the token pattern `p_tokens`.
+ * @param depth The current recursion depth, used for space profiling.
+ * @return true if s[i:] and p_tokens[j:] match completely, false otherwise.
+ */
+bool RecursiveSolver::isMatch(std::size_t i, std::size_t j, std::size_t depth) const {
+    // Update the maximum recursion depth reached for profiling purposes
+    max_depth = std::max(max_depth, depth);
+
+    // Base case: If the pattern is exhausted, the match is successful only if the string is
+    // also exhausted
+    if (j == n) {
+        return i == m;
+    }
+
+    const auto& current_token = p_tokens[j];
+    // Switch on the index of the active variant member for performance
+    switch (static_cast<TokenTypeIndex>(current_token.index())) {
+        case TokenTypeIndex::AnySequence: {
+            // Branch 1: The '*' matches an empty sequence. Skip it
+            // Branch 2: The '*' matches one character. Consume a character from s and stay on
+            // the same '*' token
+            return isMatch(i, j + 1, depth + 1) || (i < m && isMatch(i + 1, j, depth + 1));
+        }
+        case TokenTypeIndex::AnyChar: {
+            // If the string is not exhausted, this token matches the current character
+            return i < m && isMatch(i + 1, j + 1, depth + 1);
+        }
+        case TokenTypeIndex::LiteralSequence: {
+            // This token represents a sequence of one or more literal characters
+            const auto& literal_seq = std::get<LiteralSequence>(current_token);
+            const std::string& literal = literal_seq.value;
+            const std::size_t literal_len = literal.length();
+
+            // Check if the remaining part of the string matches the literal
+            if (i + literal_len <= m && s.compare(i, literal_len, literal) == 0) {
+                // If it matches, continue matching from the end of the literal
+                return isMatch(i + literal_len, j + 1, depth + 1);
+            }
+            return false;  // Mismatch if the check fails
+        }
+    }
+    APP_UNREACHABLE();  // Should not be reached
+}

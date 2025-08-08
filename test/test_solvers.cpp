@@ -5,6 +5,7 @@
 #include "solvers/memo.hpp"
 #include "solvers/recursive.hpp"
 #include "test_solver_cases.hpp"
+#include "utils/parser.hpp"
 #include "wildcard_matcher.hpp"
 
 namespace {
@@ -45,7 +46,8 @@ TYPED_TEST_P(WildcardSolverTest, MatchesAccordingToDefinedCases) {
                       << "Test Case: " << test_case.description << "\n  s: \"" << test_case.text
                       << "\"" << "\n  p: \"" << test_case.pattern << "\""));
 
-        SolverProfile profile = SolverType::runAndProfile(test_case.text, test_case.pattern);
+        SolverProfile profile =
+            SolverType::runAndProfile(test_case.text, Parser::parse(test_case.pattern).tokens);
         EXPECT_EQ(profile.result, test_case.expected_result);
     }
 }

@@ -11,6 +11,7 @@
 #include "solvers/greedy.hpp"
 #include "solvers/memo.hpp"
 #include "solvers/recursive.hpp"
+#include "utils/issues.hpp"
 #include "utils/parser.hpp"
 #include "utils/validator.hpp"
 #include "wildcard_matcher.hpp"
